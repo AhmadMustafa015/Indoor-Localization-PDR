@@ -45,6 +45,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
     //Declaring views
     private Button buttonStopCounter;
     private TextView stepCounting;
+    private TextView lastStepD;
+    private TextView totalD;
     private Button fabButton;
     private GraphView graph;
     boolean isRunning = false;
@@ -55,15 +57,19 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private StepDetection stepDetectionAlgorithm;
 
     private boolean a0,a1,a2 = false;
+    private double totalDistance = 0.0;
+    private double lastStepLength;
     private static float thm = 1.5f;
     private static float thd = 0.5f;
     private long LSI = 0;
     private static int mind = 50;
     private long stepEpoch = 0;
-    private Vector aMax;
-    private Vector aMin;
-    private float tempMax = 0;
-    private float tempMin = 999999f;
+    private double aMax;
+    //private Vector aMin;
+    private double tempMax = 0;
+    private double tempMin = 999999f;
+    private double K;
+    private static double B = 0.7f;
     private LineGraphSeries<DataPoint> mSeries1;
     private LineGraphSeries<DataPoint> mSeries2;
     private LineGraphSeries<DataPoint> mSeries3;
@@ -79,8 +85,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
         sensorMagnaticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         sensorOrientation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
-        aMax = new Vector();
-        aMin = new Vector();
+        //aMax = new Vector();
+        //aMin = new Vector();
         stepState = currentState.No_Steps;
         quaternion = new float[4];
         gravity = new float[3];
@@ -89,6 +95,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
         graph = (GraphView) findViewById(R.id.graph);
         buttonStopCounter = (Button) findViewById(R.id.button_stop);
         stepCounting = (TextView) findViewById(R.id.textview_numSteps);
+        lastStepD = (TextView) findViewById(R.id.textview_lastStepD);
+        totalD = (TextView) findViewById(R.id.textview_totalD);
+
         mSeries1 = new LineGraphSeries<>();
         mSeries2 = new LineGraphSeries<>();
         mSeries3 = new LineGraphSeries<>();
@@ -111,9 +120,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
             @Override
             public void onClick(View view) {
                 sensorManager.unregisterListener(SensorActivity.this, sensorAccelerometer);
-                sensorManager.unregisterListener(SensorActivity.this, sensorLinearAcceleration);
+                //sensorManager.unregisterListener(SensorActivity.this, sensorLinearAcceleration);
                 sensorManager.unregisterListener(SensorActivity.this, sensorOrientation);
-                sensorManager.unregisterListener(SensorActivity.this, sensorMagnaticField);
+               // sensorManager.unregisterListener(SensorActivity.this, sensorMagnaticField);
                 buttonStopCounter.setEnabled(false);
                 fabButton.setEnabled(true);
                 isRunning = false;
@@ -127,8 +136,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 if (!isRunning) {
                     isRunning = true;
                     sensorManager.registerListener(SensorActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                    sensorManager.registerListener(SensorActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
-                    sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
+                    //sensorManager.registerListener(SensorActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
+                    //sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
                     sensorManager.registerListener(SensorActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
                     fabButton.setEnabled(false);
                     buttonStopCounter.setEnabled(true);
@@ -178,8 +187,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
                         stepState = currentState.Step_Terminate;
                         ++stepCounter;
                         stepCounting.setText(String.valueOf(stepCounter));
-                        aMax.add(tempMax);
-
+                        //aMax.add(tempMax);
+                        aMax = tempMax;
+                        K = (float) (B * (1.0/Math.pow(tempMax,0.33333333333)));
                     }
                     ++stepEpoch;
                     break;
@@ -190,7 +200,11 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     if (linearAcc[2] > thm)
                     {
                         stepState = currentState.No_Steps;
-                        aMin.add(tempMin);
+                        //aMin.add(tempMin);
+                        lastStepLength = K * (Math.pow(aMax - tempMin, 0.25));
+                        lastStepD.setText(String.format("%.2f",lastStepLength));
+                        totalDistance = totalDistance + lastStepLength;
+                        totalD.setText(String.format("%.2f",totalDistance));
                     }
                     ++stepEpoch;
             }
@@ -208,12 +222,12 @@ public class SensorActivity extends Activity implements SensorEventListener {
     protected void onResume(){
         super.onResume();
         if(isRunning){
-            sensorManager.registerListener(SensorActivity.this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),sensorManager.SENSOR_DELAY_FASTEST);
+        //    sensorManager.registerListener(SensorActivity.this,
+        //            sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),sensorManager.SENSOR_DELAY_FASTEST);
             sensorManager.registerListener(SensorActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(SensorActivity.this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_FASTEST);
+            //sensorManager.registerListener(SensorActivity.this,
+            //        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_FASTEST);
             sensorManager.registerListener(SensorActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
         }
