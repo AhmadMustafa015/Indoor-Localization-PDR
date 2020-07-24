@@ -1,0 +1,32 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        applicationId "edu.onbasli.indoorlocalization"
+        minSdkVersion 22
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:appcompat-v7:28.1.1'
+    //implementation 'com.android.support:support-v4:28.1.1'
+    //implementation 'com.android.support:design:28.1.1'
+// https://mvnrepository.com/artifact/androidx.legacy/legacy-support-v4
+    implementation group: 'androidx.legacy', name: 'legacy-support-v4', version: '1.0.0-alpha1'
+    // https://mvnrepository.com/artifact/com.google.android.material/material
+    implementation group: 'com.google.android.material', name: 'material', version: '1.0.0-rc01'
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    api files('src/libs/achartengine-1.2.0.jar')
+    api files('src/libs/EJML-core-0.26.jar')
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="edu.onbasli.indoorlocalization">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/IndoorLocalization"
+        android:theme="@style/TextAppearance.AppCompat.Display3"
+        tools:replace="android:icon">
+        <activity
+            android:name=".InertiaNavegation.activity.StepCalibrationActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_calibration"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
+        </activity>
+        <activity
+            android:name=".InertiaNavegation.activity.GraphActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_graph"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat" >
+        </activity>
+        <activity
+            android:name=".InertiaNavegation.activity.UserActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_user"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
+        </activity>
+        <activity
+            android:name=".InertiaNavegation.activity.UserListActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/IndoorLocalization"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

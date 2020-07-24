@@ -1,0 +1,777 @@
+public class ScatterPlot {
+
+    private String seriesName;
+    private ArrayList<Double> xListG;
+    private ArrayList<Double> yListG;
+    /*private ArrayList<Double> xListM;
+    private ArrayList<Double> yListM;
+    private ArrayList<Double> xListC;
+    private ArrayList<Double> yListC;*/
+
+    public ScatterPlot (String seriesName) {
+        this.seriesName = seriesName;
+        xListG = new ArrayList<>();
+        yListG = new ArrayList<>();
+        /*xListM = new ArrayList<>();
+        yListM = new ArrayList<>();
+        xListC = new ArrayList<>();
+        yListC = new ArrayList<>();*/
+    }
+
+    public GraphicalView getGraphView(Context context) {
+
+        XYSeries mySeriesG;
+       // XYSeries mySeriesC;
+       // XYSeries mySeriesM;
+
+        XYSeriesRenderer myRendererG;
+        //XYSeriesRenderer myRendererM;
+       // XYSeriesRenderer myRendererC;
+        XYMultipleSeriesDataset myMultiSeries;
+        XYMultipleSeriesRenderer myMultiRenderer;
+
+        //adding the x-axis data from an ArrayList to a standard array
+        double[] xSetG = new double[xListG.size()];
+        for (int i = 0; i < xListG.size(); i++)
+            xSetG[i] = xListG.get(i);
+        //adding the x-axis data from an ArrayList to a standard array
+        /*double[] xSetM = new double[xListM.size()];
+        for (int i = 0; i < xListM.size(); i++)
+            xSetM[i] = xListM.get(i);
+        //adding the x-axis data from an ArrayList to a standard array
+        double[] xSetC = new double[xListC.size()];
+        for (int i = 0; i < xListC.size(); i++)
+            xSetC[i] = xListC.get(i);
+        //adding the y-axis data from an ArrayList to a standard array*/
+        double[] ySetG = new double[yListG.size()];
+        for (int i = 0; i < yListG.size(); i++)
+            ySetG[i] = yListG.get(i);
+        //adding the y-axis data from an ArrayList to a standard array
+       /* double[] ySetM = new double[yListM.size()];
+        for (int i = 0; i < yListM.size(); i++)
+            ySetM[i] = yListM.get(i);
+        //adding the y-axis data from an ArrayList to a standard array
+        double[] ySetC = new double[yListC.size()];
+        for (int i = 0; i < yListC.size(); i++)
+            ySetC[i] = yListC.get(i);*/
+
+        //creating a new sequence using the x-axis and y-axis data
+        mySeriesG = new XYSeries("Gyro");
+        for (int i = 0; i < xSetG.length; i++)
+            mySeriesG.add(xSetG[i], ySetG[i]);
+
+       /* mySeriesM = new XYSeries("Magnetometer");
+        for (int i = 0; i < xSetM.length; i++)
+            mySeriesM.add(xSetM[i], ySetM[i]);
+
+        mySeriesC = new XYSeries("Complementary");
+        for (int i = 0; i < xSetC.length; i++)
+            mySeriesC.add(xSetC[i], ySetC[i]);*/
+
+        //defining chart visual properties
+        myRendererG = new XYSeriesRenderer();
+        myRendererG.setFillPoints(true);
+        myRendererG.setPointStyle(PointStyle.CIRCLE);
+//        myRendererG.setColor(Color.GREEN);
+        myRendererG.setColor(Color.parseColor("#FF9A14FF"));
+
+      /*  myRendererM = new XYSeriesRenderer();
+        myRendererM.setFillPoints(true);
+        myRendererM.setPointStyle(PointStyle.SQUARE);
+        myRendererM.setColor(Color.parseColor("#FFFF1919"));
+
+        myRendererC = new XYSeriesRenderer();
+        myRendererC.setFillPoints(true);
+        myRendererC.setPointStyle(PointStyle.TRIANGLE);
+        myRendererC.setColor(Color.parseColor("#FF9A14FF"));*/
+
+        myMultiSeries = new XYMultipleSeriesDataset();
+        myMultiSeries.addSeries(mySeriesG);
+       // myMultiSeries.addSeries(mySeriesM);
+       // myMultiSeries.addSeries(mySeriesC);
+        myMultiRenderer = new XYMultipleSeriesRenderer();
+        myMultiRenderer.addSeriesRenderer(myRendererG);
+      //  myMultiRenderer.addSeriesRenderer(myRendererM);
+      //  myMultiRenderer.addSeriesRenderer(myRendererC);
+        //setting text graph element sizes
+        myMultiRenderer.setPointSize(10); //size of scatter plot points
+        myMultiRenderer.setShowLegend(false); //show legend
+        myMultiRenderer.setLegendTextSize(40);
+        myMultiRenderer.setLegendHeight(100);
+        //set chart and label sizes
+        //myMultiRenderer.setChartTitle("Position");
+        //myMultiRenderer.setChartTitleTextSize(75);
+        myMultiRenderer.setLabelsTextSize(40);
+
+        //setting X labels and Y labels position
+        int[] chartMargins = {100, 100, 25, 100}; //top, left, bottom, right
+        myMultiRenderer.setMargins(chartMargins);
+        myMultiRenderer.setYLabelsPadding(50);
+        myMultiRenderer.setXLabelsPadding(10);
+
+        //setting chart min/max
+        double bound = getMaxBound();
+        myMultiRenderer.setXAxisMin(-bound);
+        myMultiRenderer.setXAxisMax(bound);
+        myMultiRenderer.setYAxisMin(-bound);
+        myMultiRenderer.setYAxisMax(bound);
+        //myMultiRenderer.setBackgroundColor(Color.WHITE);
+        //myMultiRenderer.setApplyBackgroundColor(true);
+        myMultiRenderer.setAxesColor(Color.RED);
+        //returns the graphical view containing the graphz
+        return ChartFactory.getScatterChartView(context, myMultiSeries, myMultiRenderer);
+    }
+
+    //add a point to the series
+    public void addPoint(double x, double y) {
+        xListG.add(x);
+        yListG.add(y);
+    }
+   /* public void addPointM(double x, double y) {
+        xListM.add(x);
+        yListM.add(y);
+    }
+    public void addPointC(double x, double y) {
+        xListC.add(x);
+        yListC.add(y);
+    }*/
+    public float getLastXPoint() {
+        double x = xListG.get(xListG.size() - 1);
+        return (float)x;
+    }
+    /*public float getLastXPointM() {
+        double x = xListM.get(xListM.size() - 1);
+        return (float)x;
+    }
+    public float getLastXPointC() {
+        double x = xListC.get(xListC.size() - 1);
+        return (float)x;
+    }*/
+    public float getLastYPoint() {
+        double y = yListG.get(yListG.size() - 1);
+        return (float)y;
+    }
+    /*public float getLastYPointM() {
+        double y = yListM.get(yListM.size() - 1);
+        return (float)y;
+    }
+    public float getLastYPointC() {
+        double y = yListC.get(yListC.size() - 1);
+        return (float)y;
+    }*/
+    public void clearSet() {
+        xListG.clear();
+        yListG.clear();
+       /* xListM.clear();
+        yListM.clear();
+        xListC.clear();
+        yListC.clear();*/
+    }
+
+    private double getMaxBound() {
+        double max = 0;
+        for (double num : xListG)
+            if (max < Math.abs(num))
+                max = num;
+        for (double num : yListG)
+            if (max < Math.abs(num))
+                max = num;
+        return (Math.abs(max) / 100) * 100 + 100; //rounding up to the nearest hundred
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class GraphActivity extends AppCompatActivity implements SensorEventListener, LocationListener {
+
+    private static final long GPS_SECONDS_PER_WEEK = 511200L;
+
+    private static final float GYROSCOPE_INTEGRATION_SENSITIVITY = 0.0025f;
+
+    private static final String FOLDER_NAME = "Pedestrian_Dead_Reckoning/Graph_Activity";
+    private static final String[] DATA_FILE_NAMES = {
+            "Initial_Orientation",
+            "Linear_Acceleration",
+            "Gyroscope_Uncalibrated",
+            "Magnetic_Field_Uncalibrated",
+            "Gravity",
+            "XY_Data_Set",
+            "DebuggingHeading"
+    };
+    private static final String[] DATA_FILE_HEADINGS = {
+            "Initial_Orientation",
+            "Linear_Acceleration" + "\n" + "t;Ax;Ay;Az;findStep",
+            "Gyroscope_Uncalibrated" + "\n" + "t;uGx;uGy;uGz;xBias;yBias;zBias;heading",
+            "Magnetic_Field_Uncalibrated" + "\n" + "t;uMx;uMy;uMz;xBias;yBias;zBias;heading",
+            "Gravity" + "\n" + "t;gx;gy;gz",
+            "XY_Data_Set" + "\n" + "weekGPS;secGPS;t;strideLength;magHeading;gyroHeading;CompHeading;originalPointGX;originalPointGY;rotatedPointGX;rotatedPointGY;originalPointMX;originalPointMY;rotatedPointMX;rotatedPointMY;originalPointCX;originalPointCY;rotatedPointCX;rotatedPointCY",
+            "Time;RawGyroX;RawGyroY;RawGyroZ;xGBias;yGBias;zGBias;RawMgnX;RawMgnY;RawMgnZ;xMBias;yMBias;zMBias;HeadingGyro;HeadingMgn;HeadingComp;TotalSteps"
+    };
+
+    private DynamicStepCounter dynamicStepCounter;
+    private StaticStepCounter staticStepCounter;
+    private GyroscopeDeltaOrientation gyroscopeDeltaOrientation;
+    private GyroscopeEulerOrientation gyroscopeEulerOrientation;
+    private DataFileWriter dataFileWriter;
+    private ScatterPlot scatterPlot;
+
+    private FloatingActionButton fabButton;
+    private LinearLayout mLinearLayout;
+
+    private SensorManager sensorManager;
+    private LocationManager locationManager;
+    int totalSteps;
+    float[] gyroBias;
+    float[] magBias;
+    float[] currGravity; //current gravity
+    float[] currMag; //current magnetic field
+
+    private boolean isRunning;
+    private boolean isCalibrated;
+    private boolean usingDefaultCounter;
+    private boolean areFilesCreated;
+    private float strideLength;
+    private float gyroHeading;
+    private float magHeading;
+    private float weeksGPS;
+    private float secondsGPS;
+
+    private long startTime;
+    private boolean firstRun;
+    boolean useStatic = false;
+
+    private float initialHeading;
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_graph);
+        totalSteps = 0;
+        // get location permission
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(GraphActivity.this, new String[] {
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            },0);
+            finish();
+        }
+
+        //defining needed variables
+        gyroBias = null;
+        magBias = null;
+        currGravity = null;
+        currMag = null;
+
+        String counterSensitivity;
+
+        isRunning = isCalibrated = usingDefaultCounter = areFilesCreated = false;
+        firstRun = true;
+        strideLength = 0;
+        initialHeading = gyroHeading = magHeading = 0;
+        weeksGPS = secondsGPS = 0;
+        startTime = 0;
+
+        //getting global settings
+        strideLength = getIntent().getFloatExtra("stride_length", 2.5f);
+        //strideLength = strideLength / 3.281f;
+        isCalibrated = getIntent().getBooleanExtra("is_calibrated", false);
+        gyroBias = getIntent().getFloatArrayExtra("gyro_bias");
+        magBias = getIntent().getFloatArrayExtra("mag_bias");
+
+        //using user_name to get index of user in userList, which is also the index of the user's stride_length
+        counterSensitivity = getIntent().getStringExtra("preferred_step_counter");
+
+        //usingDefaultCounter is counterSensitivity = "default" and sensor is available
+        usingDefaultCounter = counterSensitivity.equals("default") &&
+                getIntent().getBooleanExtra("step_detector", false);
+
+        //initializing needed classes
+        gyroscopeDeltaOrientation = new GyroscopeDeltaOrientation(GYROSCOPE_INTEGRATION_SENSITIVITY, gyroBias);
+        if(!useStatic) {
+            if (usingDefaultCounter) //if using default TYPE_STEP_DETECTOR, don't need DynamicStepCounter
+                dynamicStepCounter = null;
+            else if (!counterSensitivity.equals("default"))
+                dynamicStepCounter = new DynamicStepCounter(Double.parseDouble(counterSensitivity));
+            else //if cannot use TYPE_STEP_DETECTOR but sensitivity = "default", use 1.0 sensitivity until user calibrates
+                dynamicStepCounter = new DynamicStepCounter(1.0);
+        }else {
+            dynamicStepCounter = null;
+            staticStepCounter = new StaticStepCounter(5, 2.3);
+        }
+        //defining views
+        fabButton = findViewById(R.id.fab);
+        mLinearLayout = findViewById(R.id.linearLayoutGraph);
+
+        //setting up graph with origin
+        scatterPlot = new ScatterPlot("Gyro");
+        scatterPlot.addPoint(0, 0); //AM: future update sit value using GPS
+        //scatterPlot.addPointM(0, 0); //AM: future update sit value using GPS
+        //scatterPlot.addPointC(0, 0); //AM: future update sit value using GPS
+        mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+
+        //message user w/ user_name and stride_length info
+        Toast.makeText(GraphActivity.this, "Stride Length: " + strideLength, Toast.LENGTH_SHORT).show();
+
+        //starting GPS location tracking
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, GraphActivity.this);
+
+        //starting sensors
+        //AM: Try fixed freq
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager.registerListener(GraphActivity.this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
+                SensorManager.SENSOR_DELAY_FASTEST);
+        //AM: only isCalibrated will be used
+        if (isCalibrated) {
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+        }
+        //Step detector on linear acc
+        if (usingDefaultCounter) {
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+        }
+
+        //setting up buttons
+        fabButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (!isRunning) {
+
+                    isRunning = true;
+
+                    createFiles();
+
+                    if (usingDefaultCounter)
+                        dataFileWriter.writeToFile("Linear_Acceleration",
+                                "TYPE_LINEAR_ACCELERATION will not be recorded, since the TYPE_STEP_DETECTOR is being used instead."
+                        );
+                    //AM: step1 get intial heading in repect to earth using magnetometer data
+                    float[][] initialOrientation = MagneticFieldOrientation.getOrientationMatrix(currGravity, currMag, magBias);
+                    initialHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
+
+                    //saving initial orientation data
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Gravity: " + Arrays.toString(currGravity));
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Mag: " + Arrays.toString(currMag));
+                    dataFileWriter.writeToFile("Initial_Orientation", "mag_Bias: " + Arrays.toString(magBias));
+                    dataFileWriter.writeToFile("Initial_Orientation", "gyro_Bias: " + Arrays.toString(gyroBias));
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Orientation: " + Arrays.deepToString(initialOrientation));
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Heading: " + initialHeading);
+
+//                Log.d("init_heading", "" + initialHeading);
+
+                    //TODO: fix rotation matrix
+                    //gyroscopeEulerOrientation = new GyroscopeEulerOrientation(initialOrientation);
+
+                    gyroscopeEulerOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+
+                    dataFileWriter.writeToFile("XY_Data_Set", "Initial_orientation: " +
+                            Arrays.deepToString(initialOrientation));
+                    dataFileWriter.writeToFile("Gyroscope_Uncalibrated", "Gyroscope_bias: " +
+                            Arrays.toString(gyroBias));
+                    dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", "Magnetic_field_bias:" +
+                            Arrays.toString(magBias));
+
+                    fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
+
+                } else {
+
+                    firstRun = true;
+                    isRunning = false;
+
+                    fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_play_arrow_black_24dp));
+
+                }
+
+
+            }
+        });
+
+        mLinearLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //complimentary filter
+                float compHeading = ExtraFunctions.calcCompHeading(magHeading, gyroHeading);
+
+//                Log.d("comp_heading", "" + compHeading);
+
+                //getting and rotating the previous XY points so North 0 on unit circle
+                float oPointX = scatterPlot.getLastYPoint();
+                float oPointY = -scatterPlot.getLastXPoint();
+
+                //calculating XY points from heading and stride_length
+                oPointX += ExtraFunctions.getXFromPolar(strideLength, compHeading);
+                oPointY += ExtraFunctions.getYFromPolar(strideLength, compHeading);
+
+                //rotating points by 90 degrees, so north is up
+                float rPointX = -oPointY;
+                float rPointY = oPointX;
+
+                scatterPlot.addPoint(rPointX, rPointY);
+
+                mLinearLayout.removeAllViews();
+                mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+
+            }
+        });
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        sensorManager.unregisterListener(this);
+        locationManager.removeUpdates(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (isRunning) {
+
+            // get location permission
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(GraphActivity.this, new String[] {
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                },0);
+                finish();
+            }
+
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, GraphActivity.this);
+
+            if (isCalibrated) {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            } else {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            }
+
+            if (usingDefaultCounter) {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            } else {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            }
+
+            fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
+
+        } else {
+
+            fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_play_arrow_black_24dp));
+
+        }
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+        if(firstRun) {
+            startTime = event.timestamp;
+            firstRun = false;
+        }
+
+        if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
+            currGravity = event.values;
+            Log.d("gravity_values", Arrays.toString(event.values));
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD ||
+                event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
+            currMag = event.values;
+//            Log.d("mag_values", Arrays.toString(event.values));
+        }
+
+        if (isRunning) {
+            if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
+                ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
+                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataFileWriter.writeToFile("Gravity", dataValues);
+            } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD || event.sensor.getType() ==
+                    Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
+
+                magHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias); //yaw
+
+//                Log.d("mag_heading", "" + magHeading);
+
+                //saving magnetic field data
+                ArrayList<Float> dataValues = ExtraFunctions.createList(
+                        event.values[0], event.values[1], event.values[2],
+                        magBias[0], magBias[1], magBias[2]
+                );
+                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataValues.add(magHeading);
+                dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", dataValues);
+
+            } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE ||
+                    event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
+
+                float[] deltaOrientation = gyroscopeDeltaOrientation.calcDeltaOrientation(event.timestamp, event.values);
+
+                gyroHeading = gyroscopeEulerOrientation.getHeading(deltaOrientation);
+                gyroHeading += initialHeading;
+
+//                Log.d("gyro_heading", "" + gyroHeading);
+
+                //saving gyroscope data
+                ArrayList<Float> dataValues = ExtraFunctions.createList(
+                        event.values[0], event.values[1], event.values[2],
+                        gyroBias[0], gyroBias[1], gyroBias[2]
+                );
+                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataValues.add(gyroHeading);
+                dataFileWriter.writeToFile("Gyroscope_Uncalibrated", dataValues);
+
+            } else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+
+                float norm = ExtraFunctions.calcNorm(
+                        event.values[0] +
+                                event.values[1] +
+                                event.values[2]
+                );
+
+                //if step is found, findStep == true
+                boolean stepFound = dynamicStepCounter.findStep(norm);
+
+                /*if (useStatic)
+                    //stepFound =  staticStepCounter.findStep(norm);
+                else*/
+
+                if (stepFound) {
+                    //AM: Draw here
+                    //saving linear acceleration data
+                    totalSteps++;
+                    ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
+                    dataValues.add(0, (float)(event.timestamp - startTime));
+                    dataValues.add(1f);
+                    dataFileWriter.writeToFile("Linear_Acceleration", dataValues);
+
+                    //complimentary filter
+                    float compHeading = ExtraFunctions.calcCompHeading(magHeading, gyroHeading);
+
+                    //Log.d("comp_heading", "" + compHeading);
+
+                    //getting and rotating the previous XY points so North 0 on unit circle
+                    float oPointX = scatterPlot.getLastYPoint();
+                    float oPointY = -scatterPlot.getLastXPoint();
+                    /*float oPointXM = scatterPlot.getLastYPointM();
+                    float oPointYM = -scatterPlot.getLastXPointM();
+                    float oPointXC = scatterPlot.getLastYPointC();
+                    float oPointYC = -scatterPlot.getLastXPointC();*/
+                    //calculating XY points from heading and stride_length
+                    oPointX += ExtraFunctions.getXFromPolar(strideLength, gyroHeading);
+                    oPointY += ExtraFunctions.getYFromPolar(strideLength, gyroHeading);
+
+                    /*oPointXM += ExtraFunctions.getXFromPolar(strideLength, magHeading);
+                    oPointYM += ExtraFunctions.getYFromPolar(strideLength, magHeading);
+
+                    oPointXC += ExtraFunctions.getXFromPolar(strideLength, compHeading);
+                    oPointYC += ExtraFunctions.getYFromPolar(strideLength, compHeading);*/
+                    //rotating points by 90 degrees, so north is up
+                    float rPointX = -oPointY;
+                    float rPointY = oPointX;
+
+                    /*float rPointXM = -oPointYM;
+                    float rPointYM = oPointXM;
+
+                    float rPointXC = -oPointYC;
+                    float rPointYC = oPointXC;*/
+                    scatterPlot.addPoint(rPointX, rPointY);
+                    //scatterPlot.addPointM(rPointXM, rPointYM);
+                    //scatterPlot.addPointM(rPointXC, rPointYC);
+                    //saving XY location data
+                    dataFileWriter.writeToFile("XY_Data_Set",
+                            weeksGPS,
+                            secondsGPS,
+                            (event.timestamp - startTime),
+                            strideLength,
+                            magHeading,
+                            gyroHeading,
+                            compHeading,
+                            oPointX,
+                            oPointY,
+                            rPointX,
+                            rPointY,
+                            //oPointXM,
+                           // oPointYM,
+                            //rPointXM,
+                            //rPointYM,
+                            //oPointXC,
+                            //oPointYC,
+                           // rPointXC,
+                           // rPointYC,
+                            totalSteps);
+
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+
+                    //if step is not found
+                } else {
+                    //saving linear acceleration data
+                    ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
+                    dataValues.add(0, (float) event.timestamp);
+                    dataValues.add(0f);
+                    dataFileWriter.writeToFile("Linear_Acceleration", dataValues);
+                }
+
+            } else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
+
+                boolean stepFound = (event.values[0] == 1);
+
+                if (stepFound) {
+
+                    //complimentary filter
+                    float compHeading = ExtraFunctions.calcCompHeading(magHeading, gyroHeading);
+
+                    //Log.d("comp_heading", "" + compHeading);
+
+                    //getting and rotating the previous XY points so North 0 on unit circle
+                    float oPointX = scatterPlot.getLastYPoint();
+                    float oPointY = -scatterPlot.getLastXPoint();
+
+                    //calculating XY points from heading and stride_length
+                    oPointX += ExtraFunctions.getXFromPolar(strideLength, gyroHeading);
+                    oPointY += ExtraFunctions.getYFromPolar(strideLength, gyroHeading);
+
+                    //rotating points by 90 degrees, so north is up
+                    float rPointX = -oPointY;
+                    float rPointY = oPointX;
+
+                    scatterPlot.addPoint(rPointX, rPointY);
+
+                    //saving XY location data
+                    dataFileWriter.writeToFile("XY_Data_Set",
+                            weeksGPS,
+                            secondsGPS,
+                            (event.timestamp - startTime),
+                            strideLength,
+                            magHeading,
+                            gyroHeading,
+                            oPointX,
+                            oPointY,
+                            rPointX,
+                            rPointY);
+
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+                }
+
+            }
+        }
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        long GPSTimeSec = location.getTime() / 1000;
+        weeksGPS = GPSTimeSec / GPS_SECONDS_PER_WEEK;
+        secondsGPS = GPSTimeSec % GPS_SECONDS_PER_WEEK;
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+    @Override
+    public void onProviderEnabled(String provider) {}
+
+    @Override
+    public void onProviderDisabled(String provider) {}
+
+    private void createFiles() {
+        if (!areFilesCreated) {
+            try {
+                dataFileWriter = new DataFileWriter(FOLDER_NAME, DATA_FILE_NAMES, DATA_FILE_HEADINGS);
+            } catch (IOException e) {
+                Log.e("GraphActivity", e.toString());
+            }
+            areFilesCreated = true;
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case 0:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(GraphActivity.this, "Thank you for providing permission!", Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Toast.makeText(GraphActivity.this, "Need location permission to create tour.", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+                break;
+        }
+    }
+
+
+}
