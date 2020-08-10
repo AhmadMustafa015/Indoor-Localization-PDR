@@ -37,6 +37,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private Sensor sensorAccelerometer;
     private Sensor sensorLinearAcceleration;
     private Sensor sensorMagnaticField;
+    private Sensor sensorPressure;
     private Sensor sensorOrientation;
     private Sensor sensorGravity;
     private SensorManager sensorManager;
@@ -47,6 +48,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private TextView stepCounting;
     private TextView lastStepD;
     private TextView totalD;
+    private TextView hight_p;
+
     private Button fabButton;
     private GraphView graph;
     boolean isRunning = false;
@@ -84,7 +87,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         sensorLinearAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensorMagnaticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         sensorOrientation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-
+        sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         //aMax = new Vector();
         //aMin = new Vector();
         stepState = currentState.No_Steps;
@@ -97,6 +100,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         stepCounting = (TextView) findViewById(R.id.textview_numSteps);
         lastStepD = (TextView) findViewById(R.id.textview_lastStepD);
         totalD = (TextView) findViewById(R.id.textview_totalD);
+        hight_p = (TextView) findViewById(R.id.textview_hight);
 
         mSeries1 = new LineGraphSeries<>();
         mSeries2 = new LineGraphSeries<>();
@@ -139,6 +143,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     //sensorManager.registerListener(SensorActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
                     //sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
                     sensorManager.registerListener(SensorActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
+                    sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_FASTEST);
                     fabButton.setEnabled(false);
                     buttonStopCounter.setEnabled(true);
                 }
@@ -212,6 +217,11 @@ public class SensorActivity extends Activity implements SensorEventListener {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
         }
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE)
+        {
+            hight_p.setText(String.format("%.2f", sensorEvent.values[0]));
+        }
+
     }
 
     @Override
