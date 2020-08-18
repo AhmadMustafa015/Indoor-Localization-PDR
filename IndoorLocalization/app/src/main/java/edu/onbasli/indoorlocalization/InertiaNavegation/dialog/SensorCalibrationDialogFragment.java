@@ -24,6 +24,9 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
     public static final String DIALOG_MESSAGE = "To calibrate phone press calibrate:";
     private static float[] gyroBias;
     private static float[] magBias;
+    private static float[] accBiasX;
+    private static float[] accBiasY;
+    private static float[] accBiasZ;
 
     private int isCalibrating;
 
@@ -120,10 +123,17 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
             myIntent.putExtra("is_calibrated", true);
             myIntent.putExtra("gyro_bias", gyroBias);
             myIntent.putExtra("mag_bias", magBias);
+            myIntent.putExtra("accX_bias", accBiasX);
+            myIntent.putExtra("accY_bias", accBiasY);
+            myIntent.putExtra("accZ_bias", accBiasZ);
+
         } else if (isCalibrating == NOT_CALIBRATING) {
             myIntent.putExtra("is_calibrated", false);
             myIntent.putExtra("gyro_bias", new float[3]);
             myIntent.putExtra("mag_bias", new float[3]);
+            myIntent.putExtra("accX_bias", new float[3]);
+            myIntent.putExtra("accY_bias", new float[3]);
+            myIntent.putExtra("accZ_bias", new float[3]);
         }
 
         return myIntent;
@@ -142,6 +152,18 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
 
     private static void setGyroBias(float[] mBias) {
         gyroBias = mBias;
+    }
+
+    private static void setAccBiasX(float[] mBias) {
+        accBiasX = mBias;
+    }
+
+    private static void setAccBiasY(float[] mBias) {
+        accBiasY = mBias;
+    }
+
+    private static void setAccBiasZ(float[] mBias) {
+        accBiasZ = mBias;
     }
 
     private static class SensorCalibrationHandler extends Handler {
@@ -170,6 +192,10 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
                 gyroCalibrateDialog.show(((Activity)context).getFragmentManager(), "Gyroscope Calibrate");
             } else if (msg.what == 1) {
                 setGyroBias(gyroCalibrateDialog.getGyroBias());
+                setAccBiasX(gyroCalibrateDialog.getAccBiasX());
+                setAccBiasY(gyroCalibrateDialog.getAccBiasY());
+                setAccBiasZ(gyroCalibrateDialog.getAccBiasZ());
+
                 dialog.dismiss();
             }
 

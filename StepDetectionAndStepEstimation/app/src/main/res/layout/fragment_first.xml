@@ -7,9 +7,22 @@
     tools:context=".SensorActivity">
 
     <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Floor Number"
+        android:textSize="28sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.11"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.841" />
+
+    <TextView
         android:id="@+id/textview_hight"
-        android:layout_width="144dp"
-        android:layout_height="77dp"
+        android:layout_width="138dp"
+        android:layout_height="49dp"
         android:shadowColor="#009688"
         android:text="0"
         android:textAlignment="center"
@@ -18,15 +31,32 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.872"
+        app:layout_constraintHorizontal_bias="0.868"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.796" />
+        app:layout_constraintVertical_bias="0.73" />
+
+    <TextView
+        android:id="@+id/textview_floor"
+        android:layout_width="138dp"
+        android:layout_height="49dp"
+        android:shadowColor="#009688"
+        android:text="0"
+        android:textAlignment="center"
+        android:textColor="#009688"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.868"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.838" />
 
     <TextView
         android:id="@+id/textview_totalD"
-        android:layout_width="144dp"
-        android:layout_height="77dp"
+        android:layout_width="145dp"
+        android:layout_height="53dp"
         android:shadowColor="#009688"
         android:text="0"
         android:textAlignment="center"
@@ -35,15 +65,15 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.872"
+        app:layout_constraintHorizontal_bias="0.875"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.637" />
+        app:layout_constraintVertical_bias="0.603" />
 
     <TextView
         android:id="@+id/textview_lastStepD"
-        android:layout_width="144dp"
-        android:layout_height="77dp"
+        android:layout_width="140dp"
+        android:layout_height="50dp"
         android:shadowColor="#009688"
         android:text="0"
         android:textAlignment="center"
@@ -52,10 +82,10 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.872"
+        app:layout_constraintHorizontal_bias="0.874"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.498" />
+        app:layout_constraintVertical_bias="0.471" />
 
     <TextView
         android:id="@+id/textView3"
@@ -78,10 +108,10 @@
         android:textSize="28sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.078"
+        app:layout_constraintHorizontal_bias="0.11"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.764" />
+        app:layout_constraintVertical_bias="0.718" />
 
     <TextView
         android:id="@+id/textView2"
@@ -98,8 +128,8 @@
 
     <TextView
         android:id="@+id/textview_numSteps"
-        android:layout_width="144dp"
-        android:layout_height="77dp"
+        android:layout_width="138dp"
+        android:layout_height="54dp"
         android:shadowColor="#009688"
         android:text="0"
         android:textAlignment="center"
@@ -108,10 +138,10 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.872"
+        app:layout_constraintHorizontal_bias="0.868"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.357" />
+        app:layout_constraintVertical_bias="0.333" />
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graph"

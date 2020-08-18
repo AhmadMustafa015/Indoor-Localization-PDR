@@ -89,7 +89,7 @@ public class DataFileWriter {
         String date = today.year + "-" + (today.month + 1) + "-" + today.monthDay;
         String currentTime = today.format("%H-%M-%S");
 
-        return fileName + "_" + date + "_" + currentTime + ".txt";
+        return fileName + "_" + date + "_" + currentTime + ".csv";
 
     }
 
@@ -99,7 +99,7 @@ public class DataFileWriter {
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(file, true));
             for (float value : values)
-                bufferedWriter.write(value + ";");
+                bufferedWriter.write(value + ",");
             bufferedWriter.write(System.getProperty("line.separator")); //create a line break
             bufferedWriter.close();
         } catch (IOException e) {

@@ -7,7 +7,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,7 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import edu.onbasli.indoorlocalization.InertiaNavegation.stepcounting.StaticStepCounter;
+import edu.onbasli.indoorlocalization.InertiaNavegation.extra.KalmanFilterSimple;
 import edu.onbasli.indoorlocalization.InertiaNavegation.stepcounting.StepDetection;
 import edu.onbasli.indoorlocalization.R;
 import edu.onbasli.indoorlocalization.InertiaNavegation.extra.ExtraFunctions;
@@ -36,7 +35,6 @@ import edu.onbasli.indoorlocalization.InertiaNavegation.graph.ScatterPlot;
 import edu.onbasli.indoorlocalization.InertiaNavegation.orientation.GyroscopeDeltaOrientation;
 import edu.onbasli.indoorlocalization.InertiaNavegation.orientation.GyroscopeEulerOrientation;
 import edu.onbasli.indoorlocalization.InertiaNavegation.orientation.MagneticFieldOrientation;
-import edu.onbasli.indoorlocalization.InertiaNavegation.stepcounting.DynamicStepCounter;
 
 public class GraphActivity extends AppCompatActivity implements SensorEventListener{
 
@@ -54,12 +52,12 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     };
     private static final String[] DATA_FILE_HEADINGS = {
             "Initial_Orientation",
-            "Acceleration" + "\n" + "t;Ax;Ay;Az;stepState",
-            "Gyroscope_Uncalibrated" + "\n" + "t;uGx;uGy;uGz;xBias;yBias;zBias;heading",
-            "Magnetic_Field_Uncalibrated" + "\n" + "t;uMx;uMy;uMz;xBias;yBias;zBias;heading",
-            "Gravity" + "\n" + "t;gx;gy;gz",
-            "stepNumber;strideLength;totalDistance;time;magHeading;gyroHeading;CompHeading;originalPointX;originalPointY;rotatedPointX;rotatedPointY",
-            "Time;RawGyroX;RawGyroY;RawGyroZ;xGBias;yGBias;zGBias;RawMgnX;RawMgnY;RawMgnZ;xMBias;yMBias;zMBias;HeadingGyro;HeadingMgn;HeadingComp;TotalSteps"
+            "Acceleration" + "\n" + "t,Ax,Ay,Az,stepState",
+            "Gyroscope_Uncalibrated" + "\n" + "t,uGx,uGy,uGz,xBias,yBias,zBias,gyro_heading,kalman_heading",
+            "Magnetic_Field_Uncalibrated" + "\n" + "t,uMx,uMy,uMz,xBias,yBias,zBias,heading",
+            "Gravity" + "\n" + "t,gx,gy,gz",
+            "stepNumber,strideLength,totalDistance,time,magHeading,gyroHeading,CompHeading,originalPointX,originalPointY,rotatedPointX,rotatedPointY",
+            "Time,RawGyroX,RawGyroY,RawGyroZ,xGBias,yGBias,zGBias,RawMgnX,RawMgnY,RawMgnZ,xMBias,yMBias,zMBias,HeadingGyro,HeadingMgn,HeadingComp,TotalSteps"
     };
     enum currentState {
         No_Steps,
@@ -71,7 +69,8 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     private float[] gravityCons = {0, 0, 9.81f};
     private float[] gravity;
     private StepDetection stepDetectionAlgorithm;
-
+    private boolean isFirstRun;
+    private double lastTimestamp;
     private boolean a0,a1,a2 = false;
     private double totalDistance = 0.0;
     private double lastStepLength;
@@ -102,8 +101,13 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     int totalSteps;
     float[] gyroBias;
     float[] magBias;
+    float[] accXBias;
+    float[] accYBias;
+    float[] accZBias;
+
     float[] currGravity; //current gravity
     float[] currMag; //current magnetic field
+    float[][] gyroRotationMatrix;
 
     private boolean isRunning;
     private boolean isCalibrated;
@@ -112,20 +116,33 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     private float strideLength;
     private float gyroHeading;
     private float magHeading;
-
+    private float kalmanHeading;
 
     private long startTime;
     private boolean firstRun;
     boolean useStatic = false;
 
     private float initialHeading;
-
+    //Kalman
+    private int window_size = 100; //number of readings before reset the Kalman filter state equations
+    private int KF_itr = 0;
+    private int KF_heading_itr = 0;
+    private KalmanFilterSimple KF;
+    private KalmanFilterSimple KF_heading;
+    private boolean covearianceMatrixNotInitiated;
+    private double[] Zobs;
+    private boolean covarianceMatrixNotInitiated_heading;
+    private double[] Zobs_heading;
+    float[][] prev_orientation;
+    double[][] _R;
+    double[][] _R_2;
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
         totalSteps = 0;
+        gyroRotationMatrix = new float[3][3];
         // get location permission
         /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -149,6 +166,9 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         //defining needed variables
         gyroBias = null;
         magBias = null;
+        accXBias = null;
+        accYBias = null;
+        accZBias = null;
         currGravity = null;
         currMag = null;
 
@@ -166,7 +186,11 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         isCalibrated = getIntent().getBooleanExtra("is_calibrated", false);
         gyroBias = getIntent().getFloatArrayExtra("gyro_bias");
         magBias = getIntent().getFloatArrayExtra("mag_bias");
-
+        accXBias = getIntent().getFloatArrayExtra("accX_bias");
+        accYBias = getIntent().getFloatArrayExtra("accY_bias");
+        accZBias = getIntent().getFloatArrayExtra("accZ_bias");
+        Zobs = new double[]{ExtraFunctions.getVariance(accXBias), ExtraFunctions.getVariance(accYBias), ExtraFunctions.getVariance(accZBias)};
+        Zobs_heading = new double[2];
         //using user_name to get index of user in userList, which is also the index of the user's stride_length
         counterSensitivity = getIntent().getStringExtra("preferred_step_counter");
 
@@ -210,6 +234,11 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
                     SensorManager.SENSOR_DELAY_FASTEST);
+            _R = new double[][]{{gyroBias[0],0,0},
+                                {0,gyroBias[1],0},
+                                {0,0,gyroBias[2]}};
+            _R_2 = new double[][]{{gyroBias[1],0},
+                                    {0,gyroBias[2]}};
         } else {
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
@@ -217,6 +246,11 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
                     SensorManager.SENSOR_DELAY_FASTEST);
+            _R = new double[][]{{0.1*0.1,0,0},
+                                {0,0.1*0.1,0},
+                                {0,0,0.1*0.1}};
+            _R_2 = new double[][]{{0.1*0.1,0},
+                                {0,0.1*0.1}};
         }
         //Step detector on acc
         sensorManager.registerListener(GraphActivity.this,
@@ -236,8 +270,8 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
 
                     //AM: step1 get intial heading in repect to earth using magnetometer data
                     float[][] initialOrientation = MagneticFieldOrientation.getOrientationMatrix(currGravity, currMag, magBias);
-                    initialHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
-
+                    initialHeading = MagneticFieldOrientation.getHeading(initialOrientation);
+                    prev_orientation = initialOrientation;
                     //saving initial orientation data
                     dataFileWriter.writeToFile("Initial_Orientation", "init_Gravity: " + Arrays.toString(currGravity));
                     dataFileWriter.writeToFile("Initial_Orientation", "init_Mag: " + Arrays.toString(currMag));
@@ -303,6 +337,14 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
 
             }
         });*/
+        //Kalman
+        KF = new KalmanFilterSimple();
+        KF_heading = new KalmanFilterSimple();
+        KF.configure(3);
+        KF_heading.configure(2);
+        isFirstRun = true;
+        covearianceMatrixNotInitiated = true;
+        covarianceMatrixNotInitiated_heading = true;
 
     }
 
@@ -389,7 +431,6 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             currMag = event.values;
 //            Log.d("mag_values", Arrays.toString(event.values));
         }
-
         if (isRunning) {
             if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
                 ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
@@ -398,8 +439,10 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD || event.sensor.getType() ==
                     Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
 
-                magHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias); //yaw
-
+                float[][] orientationMatrix = MagneticFieldOrientation.getOrientationMatrix(currGravity, currMag, magBias);
+                magHeading = MagneticFieldOrientation.getHeading(orientationMatrix); //yaw
+                Zobs_heading[0] = orientationMatrix[0][0] - prev_orientation[0][0];
+                Zobs_heading[1] = orientationMatrix[1][0] - prev_orientation[1][0];
 //                Log.d("mag_heading", "" + magHeading);
 
                 //saving magnetic field data
@@ -415,8 +458,48 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
                 float[] deltaOrientation = gyroscopeDeltaOrientation.calcDeltaOrientation(event.timestamp, event.values);
+                //Kalman Filter: 1- initiate X matrix
+                gyroRotationMatrix = gyroscopeEulerOrientation.getOrientationMatrix(deltaOrientation);
+                double currentTime = ExtraFunctions.nsToSec(event.timestamp);
+                double [][] X = ExtraFunctions.vectorToMatrix(new double[]{gyroRotationMatrix[2][0],gyroRotationMatrix[2][1],gyroRotationMatrix[2][2]});
+                if (isFirstRun) {
+                    isFirstRun = false;
+                    lastTimestamp = currentTime;
+                    KF.setState(X);
+                    KF_heading.setState(ExtraFunctions.vectorToMatrix(new double[]{gyroRotationMatrix[0][0],gyroRotationMatrix[1][0]}));
 
-                gyroHeading = gyroscopeEulerOrientation.getHeading(deltaOrientation);
+                }
+                else {
+                    if(covearianceMatrixNotInitiated)
+                    {
+                        KF.initiateErrorCovariance(new double[]{gyroRotationMatrix[2][0],gyroRotationMatrix[2][1],gyroRotationMatrix[2][2]});
+                        KF_heading.initiateErrorCovariance(new double[]{gyroRotationMatrix[0][0],gyroRotationMatrix[1][0]});
+                        covearianceMatrixNotInitiated = false;
+                    }
+                    KF.setState(X);
+                    KF_heading.setState(ExtraFunctions.vectorToMatrix(new double[]{gyroRotationMatrix[0][0],gyroRotationMatrix[1][0]}));
+                    double deltaT = currentTime - lastTimestamp;
+                    double [][] B = {{0,-gyroRotationMatrix[2][2] * deltaT,gyroRotationMatrix[2][1] * deltaT},
+                                                    {gyroRotationMatrix[2][2] * deltaT,0,-gyroRotationMatrix[2][0] * deltaT},
+                                                    {-gyroRotationMatrix[2][1] * deltaT,gyroRotationMatrix[2][0] * deltaT,0}};
+                    double [][] B_heading = {{-gyroRotationMatrix[0][2] * deltaT,gyroRotationMatrix[0][1] * deltaT},
+                            {-gyroRotationMatrix[1][2] * deltaT,gyroRotationMatrix[1][1] * deltaT}};
+                    KF_heading.setState(ExtraFunctions.vectorToMatrix(new double[]{gyroRotationMatrix[0][0],gyroRotationMatrix[1][0]}));
+                    double [][] u = ExtraFunctions.vectorToMatrix(event.values);
+                    double [][] u_heading = ExtraFunctions.vectorToMatrix(new double[]{event.values[1],event.values[2]});
+                    KF.setControlMatrix(u,B);
+                    KF_heading.setControlMatrix(u_heading,B_heading);
+                    KF.predict();
+                    KF_heading.predict();
+                    KF.update(new double[]{gyroRotationMatrix[2][0],gyroRotationMatrix[2][1],gyroRotationMatrix[2][2]},Zobs,_R);
+                    KF_heading.update(new double[]{gyroRotationMatrix[0][0],gyroRotationMatrix[1][0]},Zobs_heading,_R_2);
+                           /* new double[][]{{gyroBias[0],0,0},
+                                    {0,gyroBias[1],0},
+                                    {0,0,gyroBias[2]}});*/
+                }
+
+                lastTimestamp = currentTime;
+                gyroHeading = gyroscopeEulerOrientation.getHeading(gyroRotationMatrix);
                 gyroHeading += initialHeading;
 
 //                Log.d("gyro_heading", "" + gyroHeading);
@@ -426,8 +509,11 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                         event.values[0], event.values[1], event.values[2],
                         gyroBias[0], gyroBias[1], gyroBias[2]
                 );
+                float[][] kH = KF_heading.getState();
+                kalmanHeading = (float) (Math.atan2(kH[1][0], kH[0][0]) + initialHeading);
                 dataValues.add(0, (float)(event.timestamp - startTime));
                 dataValues.add(gyroHeading);
+                dataValues.add(kalmanHeading);
                 dataFileWriter.writeToFile("Gyroscope_Uncalibrated", dataValues);
 
             } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
@@ -509,8 +595,8 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     float oPointXC = scatterPlot.getLastYPointC();
                     float oPointYC = -scatterPlot.getLastXPointC();*/
                     //calculating XY points from heading and stride_length
-                    oPointX += ExtraFunctions.getXFromPolar(strideLength, compHeading);
-                    oPointY += ExtraFunctions.getYFromPolar(strideLength, compHeading);
+                    oPointX += ExtraFunctions.getXFromPolar(strideLength, gyroHeading);
+                    oPointY += ExtraFunctions.getYFromPolar(strideLength, gyroHeading);
 
                     /*oPointXM += ExtraFunctions.getXFromPolar(strideLength, magHeading);
                     oPointYM += ExtraFunctions.getYFromPolar(strideLength, magHeading);
@@ -559,7 +645,6 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                 }
             }
         }
-
     }
 
     private void createFiles() {

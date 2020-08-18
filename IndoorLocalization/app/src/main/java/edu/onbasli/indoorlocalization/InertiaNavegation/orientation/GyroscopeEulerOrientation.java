@@ -43,9 +43,9 @@ public class GyroscopeEulerOrientation {
         return C.clone();
     }
 
-    public float getHeading(float[] gyroValue) {
-        getOrientationMatrix(gyroValue);
-        return (float) (Math.atan2(C[1][0], C[0][0]));
+    public float getHeading(float[][] rotationMatrix) {
+        //getOrientationMatrix(gyroValue);
+        return (float) (Math.atan2(rotationMatrix[1][0], rotationMatrix[0][0]));
     }
 
     private float[][] calcMatrixA(float wX, float wY, float wZ) {

@@ -182,7 +182,10 @@ public final class ExtraFunctions {
     }
 
     public static double[][] vectorToMatrix(double[] array) {
-        return new double[][]{{array[0]},{array[1]},{array[2]}};
+        if(array.length == 3)
+            return new double[][]{{array[0]},{array[1]},{array[2]}};
+        else
+            return new double[][]{{array[0]},{array[1]}};
     }
     public static double[][] vectorToMatrix(float[] array) {
         return new double[][]{{array[0]},{array[1]},{array[2]}};
@@ -254,6 +257,23 @@ public final class ExtraFunctions {
         for (int i = 0; i < floatValues.length; i++)
             doubleValues[i] = floatValues[i];
         return doubleValues;
+    }
+    public static double getVariance (float[] dataInput)
+    {
+        double sum = 0;
+        double N = dataInput.length;
+        for (int i = 0; i < N; i++)
+        {
+            sum += dataInput[i];
+        }
+        double mean = sum / N;
+        double std = 0;
+        for (int i = 0; i < N; i++)
+        {
+            std += (dataInput[i] - mean) * (dataInput[i] - mean);
+        }
+
+        return std / N;
     }
 
 //    public static double[] matrixToVector(double[][] matrix) {

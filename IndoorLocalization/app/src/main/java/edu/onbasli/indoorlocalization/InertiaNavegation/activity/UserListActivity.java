@@ -66,7 +66,7 @@ public class UserListActivity extends AppCompatActivity implements OnUserUpdateL
 
                 Bundle mBundle = new Bundle();
                 mBundle.putString("user_name", userList.get(position));
-                mBundle.putFloat("stride_length", Float.parseFloat(strideList.get(position)));
+                //mBundle.putFloat("stride_length", Float.parseFloat(strideList.get(position)));
                 mBundle.putString("preferred_step_counter", preferredStepCounterList.get(position));
                 mBundle.putBoolean("step_detector", checkSensor(Sensor.TYPE_STEP_DETECTOR));
 
@@ -86,7 +86,7 @@ public class UserListActivity extends AppCompatActivity implements OnUserUpdateL
 
                 AccessUserDialogFragment accessUserDialog = new AccessUserDialogFragment();
                 accessUserDialog.setUserName(userList.get(position));
-                accessUserDialog.setStrideLength(strideList.get(position));
+                //accessUserDialog.setStrideLength(strideList.get(position));
                 accessUserDialog.show(getFragmentManager(), "User Settings");
 
                 return true;
@@ -122,7 +122,7 @@ public class UserListActivity extends AppCompatActivity implements OnUserUpdateL
             String preferredStepCounter = String.valueOf(data.getDoubleExtra("preferred_step_counter", 0));
 
             userList.add(userName);
-            strideList.add(strideLength);
+            //strideList.add(strideLength);
             preferredStepCounterList.add(preferredStepCounter);
             updatePrefs();
 
@@ -145,7 +145,7 @@ public class UserListActivity extends AppCompatActivity implements OnUserUpdateL
     @Override
     public void onUserUpdateListener(Bundle bundle) {
         userList.add(bundle.getString(UserDetailsDialogFragment.USER_TAG));
-        strideList.add(bundle.getString(UserDetailsDialogFragment.STRIDE_LENGTH_TAG));
+        //strideList.add(bundle.getString(UserDetailsDialogFragment.STRIDE_LENGTH_TAG));
         preferredStepCounterList.add("0");
 
         refreshListView();
@@ -164,7 +164,7 @@ public class UserListActivity extends AppCompatActivity implements OnUserUpdateL
 
     private void updatePrefs() {
         ExtraFunctions.addArrayToSharedPreferences("user_list", userList, sharedPreferencesEditor);
-        ExtraFunctions.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
+        //ExtraFunctions.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
         ExtraFunctions.addArrayToSharedPreferences("preferred_step_counter", preferredStepCounterList, sharedPreferencesEditor);
     }
 

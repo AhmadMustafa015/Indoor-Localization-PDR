@@ -38,12 +38,18 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
     };
 
     private Sensor sensorGyroscopeU;
+    private Sensor sensorAccU;
+
     private SensorManager sensorManager;
 
     private ProgressDialog progressDialog;
     private Handler handler;
 
     private GyroscopeBias gyroscopeBias;
+    private float[] accBiasX;
+    private float[] accBiasY;
+    private float[] accBiasZ;
+    private int counter = 0;
 
     private int runCount;
     private long startTime;
@@ -69,11 +75,16 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
 
 
         gyroscopeBias = new GyroscopeBias(600);
+        accBiasX = new float[600];
+        accBiasY = new float[600];
+        accBiasZ = new float[600];
+
 
         progressDialog = new ProgressDialog(getActivity());
 
         sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         sensorGyroscopeU = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+        sensorAccU = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
         alertDialogBuilder
@@ -99,6 +110,7 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(GyroCalibrationDialogFragment.this, sensorGyroscopeU, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GyroCalibrationDialogFragment.this, sensorAccU, SensorManager.SENSOR_DELAY_FASTEST);
                 progressDialog = ProgressDialog.show(getActivity(), "Calibrating", "Please wait.", true, false);
             }
         });
@@ -142,6 +154,15 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
 
             }
 
+        }else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+        {
+            if(counter < 600)
+            {
+                accBiasX[counter] = event.values[0];
+                accBiasY[counter] = event.values[1];
+                accBiasZ[counter] = event.values[2];
+                counter++;
+            }
         }
 
     }
@@ -159,6 +180,15 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
     public float[] getGyroBias() {
         return gyroscopeBias.getBias();
     }
+    public float[] getAccBiasX(){
 
+        return accBiasX;
+    }
+    public float[] getAccBiasY(){
+        return accBiasY;
+    }
+    public float[] getAccBiasZ(){
+        return accBiasZ;
+    }
 
 }

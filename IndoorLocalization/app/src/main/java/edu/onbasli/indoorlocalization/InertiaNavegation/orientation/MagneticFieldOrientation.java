@@ -64,8 +64,8 @@ public final class MagneticFieldOrientation {
 
     }
 
-    public static float getHeading(float[] G_values, float[] M_values, float[] M_bias) {
-        float[][] orientationMatrix = getOrientationMatrix(G_values, M_values, M_bias);
+    public static float getHeading(float[][] orientationMatrix) {
+        //float[][] orientationMatrix = getOrientationMatrix(G_values, M_values, M_bias);
         return (float) Math.atan2(orientationMatrix[1][0], orientationMatrix[0][0]);
     }
 

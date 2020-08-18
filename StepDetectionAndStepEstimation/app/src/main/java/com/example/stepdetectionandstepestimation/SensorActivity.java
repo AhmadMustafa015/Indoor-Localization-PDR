@@ -76,11 +76,25 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private LineGraphSeries<DataPoint> mSeries1;
     private LineGraphSeries<DataPoint> mSeries2;
     private LineGraphSeries<DataPoint> mSeries3;
-
+    //height estimation
+    private final int timeToUpdate = 3; //time which after we will see if the floor number changed
+    private final int timeToAverage = 5; //Take avg readings every 1s
+    private Vector<Float> avgReadings;
+    private float avgBefore3 = 0; //average values before 3 seconds;
+    private float avgBefore1 = 0; //average values in the last 1 seconds;
+    private int initialFloor = 0;
+   // private float lastAverageTime, lastUpdateTime = 0;
+    private final float mPh_btwFloors = 0.38f;
+    private boolean first_run = true;
+    private boolean firstRun = true;
+    private TextView floorNum;
+    private float currentTime = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_first);
+        //Height
+        avgReadings = new Vector<Float>();
         //defining snesors
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -101,6 +115,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         lastStepD = (TextView) findViewById(R.id.textview_lastStepD);
         totalD = (TextView) findViewById(R.id.textview_totalD);
         hight_p = (TextView) findViewById(R.id.textview_hight);
+        floorNum = (TextView) findViewById(R.id.textview_floor);
 
         mSeries1 = new LineGraphSeries<>();
         mSeries2 = new LineGraphSeries<>();
@@ -143,7 +158,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     //sensorManager.registerListener(SensorActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
                     //sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
                     sensorManager.registerListener(SensorActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
-                    sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_FASTEST);
+                    sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
                     fabButton.setEnabled(false);
                     buttonStopCounter.setEnabled(true);
                 }
@@ -219,7 +234,53 @@ public class SensorActivity extends Activity implements SensorEventListener {
         }
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE)
         {
-            hight_p.setText(String.format("%.2f", sensorEvent.values[0]));
+            if(sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null)
+            {
+                hight_p.setText("NaN");
+                floorNum.setText("NaN");
+                return;
+            }
+            //float currentTime = 0;
+            /*if(firstRun)
+            {
+                lastUpdateTime = currentTime;
+                lastAverageTime = currentTime;
+                firstRun = false;
+            }*/
+            //final float deltaT = currentTime - lastAverageTime;
+            //final float deltaTU = currentTime - lastUpdateTime;
+            if(avgReadings.size() < timeToAverage)
+            {
+                avgReadings.add(sensorEvent.values[0]);
+            }
+            else {
+                avgBefore1 =0;
+                        //lastAverageTime = currentTime;
+                for (float value :avgReadings) {
+                    avgBefore1 += value;
+                }
+                avgBefore1 /= (float) avgReadings.size();
+                avgReadings.clear();
+                if(first_run)
+                {
+                    avgBefore3 = avgBefore1;
+                    first_run = false;
+                }
+                ++currentTime;
+            }
+            if(currentTime >= timeToUpdate)
+            {
+                if (avgBefore1 - avgBefore3 > mPh_btwFloors)
+                    initialFloor -= 1;
+                else if (avgBefore1 - avgBefore3 < -mPh_btwFloors)
+                    ++initialFloor;
+                //lastUpdateTime = currentTime;
+                avgBefore3 = avgBefore1;
+                currentTime = 0;
+            }
+                hight_p.setText(String.format("%.2f", sensorEvent.values[0]));
+                floorNum.setText(String.valueOf(initialFloor));
+
         }
 
     }
