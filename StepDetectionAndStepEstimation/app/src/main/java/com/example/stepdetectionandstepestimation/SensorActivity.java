@@ -2,9 +2,6 @@ package com.example.stepdetectionandstepestimation;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,10 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import com.jjoe64.graphview.GraphView;
-import androidx.core.content.ContextCompat;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -77,18 +71,31 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private LineGraphSeries<DataPoint> mSeries2;
     private LineGraphSeries<DataPoint> mSeries3;
     //height estimation
-    private final int timeToUpdate = 3; //time which after we will see if the floor number changed
+   // private final int timeToUpdate = 15; //time which after we will see if the floor number changed
     private final int timeToAverage = 5; //Take avg readings every 1s
     private Vector<Float> avgReadings;
-    private float avgBefore3 = 0; //average values before 3 seconds;
-    private float avgBefore1 = 0; //average values in the last 1 seconds;
-    private int initialFloor = 0;
+    private float avgT_2 = 0; //average values before 3 seconds;
+    private float avgT_0 = 0; //average values in the last 1 seconds;
+    private float avgT_5 = 0; //average values in the last 5 seconds;
+    private float pstart = 0; //p at start walking up or down;
+    private float pend = 0; //p at the end of walking up or down;
+
+    private int currentFloor = 0;
    // private float lastAverageTime, lastUpdateTime = 0;
-    private final float mPh_btwFloors = 0.38f;
+    private final float mPh_btwFloors = 0.30f;
     private boolean first_run = true;
     private boolean firstRun = true;
     private TextView floorNum;
     private float currentTime = 0;
+    private final float thetaT = 0.1f; //hpa
+    private int N0 , N1 = 5; //to remove ping-pong effect
+    private int num1, num2 = 0; // counters
+    private boolean enterLoop2 = false;
+    private int upORdown = 0; //1 means up 2 means down
+    private final float h0 = 3.52f; //height of each layer in the building
+    private final float temperature = 27.0f;
+    private final float segma = 1/273.15f;
+    private final float eqConst = 18410.183f;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -222,9 +229,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
                         stepState = currentState.No_Steps;
                         //aMin.add(tempMin);
                         lastStepLength = K * (Math.pow(aMax - tempMin, 0.25));
-                        lastStepD.setText(String.format("%.2f",lastStepLength));
+                        //lastStepD.setText(String.format("%.2f",lastStepLength));
                         totalDistance = totalDistance + lastStepLength;
-                        totalD.setText(String.format("%.2f",totalDistance));
+                        //totalD.setText(String.format("%.2f",totalDistance));
                     }
                     ++stepEpoch;
             }
@@ -240,46 +247,65 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 floorNum.setText("NaN");
                 return;
             }
-            //float currentTime = 0;
-            /*if(firstRun)
-            {
-                lastUpdateTime = currentTime;
-                lastAverageTime = currentTime;
-                firstRun = false;
-            }*/
             //final float deltaT = currentTime - lastAverageTime;
             //final float deltaTU = currentTime - lastUpdateTime;
             if(avgReadings.size() < timeToAverage)
             {
-                avgReadings.add(sensorEvent.values[0]);
+                avgReadings.add(sensorEvent.values[0]); //pt
             }
             else {
-                avgBefore1 =0;
-                        //lastAverageTime = currentTime;
+                avgT_0 = 0;
                 for (float value :avgReadings) {
-                    avgBefore1 += value;
+                    avgT_0 += value;
                 }
-                avgBefore1 /= (float) avgReadings.size();
-                avgReadings.clear();
-                if(first_run)
+                avgT_0 /= (float) avgReadings.size(); //pt average
+                if(firstRun)
                 {
-                    avgBefore3 = avgBefore1;
-                    first_run = false;
+                    avgT_2 = avgT_0;
+                    firstRun = false;
+                }
+                avgReadings.clear();
+                if(currentTime == 2)
+                {
+                    if (!enterLoop2 ) {
+                        if (Math.abs(avgT_0 - avgT_2) > thetaT) {
+                            if (num1 == 0)
+                                avgT_5 = avgT_0;
+                            if (num1 == N0) {
+                                pstart = avgT_5;
+                                enterLoop2 = true;
+                                num1 = 0;
+                                lastStepD.setText(String.format("%.2f", pstart));
+                            }
+                            else
+                                ++num1;
+                        } else {
+                            num1 = 0;
+                        }
+                    }else {
+                        if (Math.abs(avgT_0 - avgT_2) < thetaT){
+                            if (num2 == 0)
+                                avgT_5 = avgT_0;
+                            if (num2 == N1) {
+                                pend = avgT_5;
+                                enterLoop2 = false;
+                                num2 = 0;
+                                currentFloor += Math.round((1/h0) * eqConst * (1+segma * temperature) * Math.log10(pstart/pend));
+                                floorNum.setText(String.valueOf(currentFloor));
+                                totalD.setText(String.format("%.2f", pend));
+                            }
+                            else
+                                ++num2;
+                        }else {
+                            num2 = 0;
+                        }
+                    }
+                    avgT_2 = avgT_0;
+                    currentTime = 0;
                 }
                 ++currentTime;
             }
-            if(currentTime >= timeToUpdate)
-            {
-                if (avgBefore1 - avgBefore3 > mPh_btwFloors)
-                    initialFloor -= 1;
-                else if (avgBefore1 - avgBefore3 < -mPh_btwFloors)
-                    ++initialFloor;
-                //lastUpdateTime = currentTime;
-                avgBefore3 = avgBefore1;
-                currentTime = 0;
-            }
                 hight_p.setText(String.format("%.2f", sensorEvent.values[0]));
-                floorNum.setText(String.valueOf(initialFloor));
 
         }
 
