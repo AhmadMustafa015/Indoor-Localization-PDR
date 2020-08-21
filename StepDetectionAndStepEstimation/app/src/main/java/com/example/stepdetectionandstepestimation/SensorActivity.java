@@ -1,25 +1,47 @@
 package com.example.stepdetectionandstepestimation;
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+
 import com.jjoe64.graphview.GraphView;
 
 import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Vector;
 
 public class SensorActivity extends Activity implements SensorEventListener {
     public SensorActivity() {
     }
+    private boolean areFilesCreated;
+    private static final String FOLDER_NAME = "Floor_detect";
+    private static final String[] DATA_FILE_NAMES = {
+            "Floor_Detect",
+            "Acceleration"
+    };
+    private static final String[] DATA_FILE_HEADINGS = {
+            "Barometer,currentAvg,AvgBefore_2_Second,Pstart,Pend,CurrentFloor",
+            "Acceleration" + "\n" + "t,Ax,Ay,Az,stepState"
+    };
+    private DataFileWriter dataFileWriter;
+
 
     enum currentState {
         No_Steps,
@@ -87,7 +109,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private boolean firstRun = true;
     private TextView floorNum;
     private float currentTime = 0;
-    private final float thetaT = 0.1f; //hpa
+    private final float thetaT = 0.01f; //hpa
     private int N0 , N1 = 5; //to remove ping-pong effect
     private int num1, num2 = 0; // counters
     private boolean enterLoop2 = false;
@@ -123,6 +145,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         totalD = (TextView) findViewById(R.id.textview_totalD);
         hight_p = (TextView) findViewById(R.id.textview_hight);
         floorNum = (TextView) findViewById(R.id.textview_floor);
+        areFilesCreated = false;
 
         mSeries1 = new LineGraphSeries<>();
         mSeries2 = new LineGraphSeries<>();
@@ -160,6 +183,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             @Override
             public void onClick(View view) {
                 if (!isRunning) {
+                    createFiles();
                     isRunning = true;
                     sensorManager.registerListener(SensorActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                     //sensorManager.registerListener(SensorActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
@@ -275,7 +299,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                                 pstart = avgT_5;
                                 enterLoop2 = true;
                                 num1 = 0;
-                                lastStepD.setText(String.format("%.2f", pstart));
+                                //lastStepD.setText(String.format("%.2f", pstart));
                             }
                             else
                                 ++num1;
@@ -292,7 +316,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                                 num2 = 0;
                                 currentFloor += Math.round((1/h0) * eqConst * (1+segma * temperature) * Math.log10(pstart/pend));
                                 floorNum.setText(String.valueOf(currentFloor));
-                                totalD.setText(String.format("%.2f", pend));
+                                //totalD.setText(String.format("%.2f", pend));
                             }
                             else
                                 ++num2;
@@ -305,7 +329,16 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 }
                 ++currentTime;
             }
-                hight_p.setText(String.format("%.2f", sensorEvent.values[0]));
+            dataFileWriter.writeToFile("Floor_Detect",
+                    (float) sensorEvent.values[0],
+                    avgT_0,
+                    avgT_2,
+                    pstart,
+                    pend,
+                    (float) currentFloor);
+
+
+                    hight_p.setText(String.format("%.2f", sensorEvent.values[0]));
 
         }
 
@@ -318,7 +351,18 @@ public class SensorActivity extends Activity implements SensorEventListener {
     @Override
     protected void onResume(){
         super.onResume();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SensorActivity.this, new String[] {
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            },0);
+            finish();
+        }
         if(isRunning){
+
+                // get location permission
+
         //    sensorManager.registerListener(SensorActivity.this,
         //            sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),sensorManager.SENSOR_DELAY_FASTEST);
             sensorManager.registerListener(SensorActivity.this,
@@ -327,6 +371,32 @@ public class SensorActivity extends Activity implements SensorEventListener {
             //        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_FASTEST);
             sensorManager.registerListener(SensorActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
+        }
+    }
+    private void createFiles() {
+        if (!areFilesCreated) {
+            try {
+                dataFileWriter = new DataFileWriter(FOLDER_NAME, DATA_FILE_NAMES, DATA_FILE_HEADINGS);
+            } catch (IOException e) {
+                Log.e("SensorActivity", e.toString());
+            }
+            areFilesCreated = true;
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case 0:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(SensorActivity.this, "Thank you for providing permission!", Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Toast.makeText(SensorActivity.this, "Need location permission to create tour.", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+                break;
         }
     }
 }
