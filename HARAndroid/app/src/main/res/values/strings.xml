@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Human Activity Recognition</string>
+    <string name="activity">Activity</string>
+    <string name="probability">Probability</string>
+    <string name="downstairs">Downstairs</string>
+    <string name="upstairs">Upstairs</string>
+    <string name="walking">Walking</string>
+    <string name="standing_sitting">standing_sitting</string>
+    <string name="Running">Running</string>
+    <string name="Total_Acceleration">Total_Acceleration</string>
+    <string name="Linear_Acceleration">Linear_Acceleration</string>
+    <string name="Gyroscope">Gyroscope</string>
+    <string name="Stationary">Stationary</string>
+    <string name="Elevator">Elevator</string>
+    <string name="Falling">Falling</string>
+    <string name="Car_In_Out">Car_In_out</string>
+</resources>
