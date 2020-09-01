@@ -25,7 +25,8 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_graph"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat" >
+            android:theme="@style/Theme.AppCompat"
+            >
         </activity>
         <activity
             android:name=".InertiaNavegation.activity.UserActivity"
@@ -45,6 +46,10 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".InertiaNavegation.activity.config.FilterConfigActivity"
+            android:theme="@style/AppTheme"
+            android:screenOrientation="portrait" >
         </activity>
 
     </application>

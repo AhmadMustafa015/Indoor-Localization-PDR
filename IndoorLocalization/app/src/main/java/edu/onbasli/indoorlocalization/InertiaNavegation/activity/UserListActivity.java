@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +22,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 
+import edu.onbasli.indoorlocalization.InertiaNavegation.activity.config.FilterConfigActivity;
 import edu.onbasli.indoorlocalization.R;
 import edu.onbasli.indoorlocalization.InertiaNavegation.dialog.AccessUserDialogFragment;
 import edu.onbasli.indoorlocalization.InertiaNavegation.dialog.SensorCalibrationDialogFragment;
@@ -29,7 +31,6 @@ import edu.onbasli.indoorlocalization.InertiaNavegation.extra.ExtraFunctions;
 import edu.onbasli.indoorlocalization.InertiaNavegation.interfaces.OnUserUpdateListener;
 
 public class UserListActivity extends AppCompatActivity implements OnUserUpdateListener {
-
     public static final int REQUEST_CODE = 0;
 
     private ListView myList;
@@ -167,5 +168,29 @@ public class UserListActivity extends AppCompatActivity implements OnUserUpdateL
         //ExtraFunctions.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
         ExtraFunctions.addArrayToSharedPreferences("preferred_step_counter", preferredStepCounterList, sharedPreferencesEditor);
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.gyroscope, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_reset:
+                break;
+            case R.id.action_config:
+                Intent intent = new Intent();
+                intent.setClass(this, FilterConfigActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.action_help:
+                //showHelpDialog();
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
 
+        return true;
+    }
 }

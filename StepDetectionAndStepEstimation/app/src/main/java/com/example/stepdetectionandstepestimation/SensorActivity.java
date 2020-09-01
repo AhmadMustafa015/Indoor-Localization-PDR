@@ -1,6 +1,7 @@
 package com.example.stepdetectionandstepestimation;
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -9,6 +10,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -17,6 +20,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
+import com.example.stepdetectionandstepestimation.OrientationFusedKalman.LinearAccelerationFusion;
+import com.example.stepdetectionandstepestimation.OrientationFusedKalman.OrientationFusedKalman;
+import com.example.stepdetectionandstepestimation.OrientationFusedKalman.RotationUtil;
+import com.example.stepdetectionandstepestimation.config.FilterConfigActivity;
+import com.example.stepdetectionandstepestimation.filters.LowPassFilter;
+import com.example.stepdetectionandstepestimation.filters.MeanFilter;
+import com.example.stepdetectionandstepestimation.filters.MedianFilter;
+import com.example.stepdetectionandstepestimation.prefs.PrefUtils;
 import com.jjoe64.graphview.GraphView;
 
 import com.jjoe64.graphview.LegendRenderer;
@@ -24,7 +35,6 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Vector;
 
 public class SensorActivity extends Activity implements SensorEventListener {
@@ -53,6 +63,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private Sensor sensorAccelerometer;
     private Sensor sensorLinearAcceleration;
     private Sensor sensorMagnaticField;
+    private Sensor gyroscope;
     private Sensor sensorPressure;
     private Sensor sensorOrientation;
     private Sensor sensorGravity;
@@ -70,7 +81,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private GraphView graph;
     boolean isRunning = false;
 
-    private float[] quaternion;
+    private double[] quaternion;
     private float[] gravityCons = {0, 0, 9.81f};
     private float[] gravity;
     private StepDetection stepDetectionAlgorithm;
@@ -78,8 +89,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private boolean a0,a1,a2 = false;
     private double totalDistance = 0.0;
     private double lastStepLength;
-    private static float thm = 1.5f;
-    private static float thd = 0.5f;
+    private static float thm = 0.5f;
+    private static float thd = 0.3f;
     private long LSI = 0;
     private static int mind = 50;
     private long stepEpoch = 0;
@@ -118,6 +129,19 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private final float temperature = 27.0f;
     private final float segma = 1/273.15f;
     private final float eqConst = 18410.183f;
+
+    private long accTime = 0;
+    private float[] magnetic = new float[3];
+    private static float[] acceleration_val = new float[3];
+    private static float[] linearAcceleration = new float[3];
+    private float[] rotation = new float[3];
+    MeanFilter meanFilterAcc;
+    MedianFilter medianFilter;
+    LowPassFilter lowPassFilter;
+    private boolean hasAcceleration = false;
+    private boolean hasMagnetic = false;
+    private LinearAccelerationFusion linearAccelerationFilterKalman;
+    private OrientationFusedKalman orientationFusionKalman;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -129,12 +153,13 @@ public class SensorActivity extends Activity implements SensorEventListener {
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorLinearAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensorMagnaticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sensorOrientation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         //aMax = new Vector();
         //aMin = new Vector();
         stepState = currentState.No_Steps;
-        quaternion = new float[4];
+        quaternion = new double[4];
         gravity = new float[3];
         stepDetectionAlgorithm = new StepDetection();
         fabButton = (Button) findViewById(R.id.button_start);
@@ -177,6 +202,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 isRunning = false;
                 stepCounting.setText("0");
                 stepCounter = 0;
+                orientationFusionKalman.stopFusion();
             }
         });
         fabButton.setOnClickListener(new View.OnClickListener() {
@@ -187,37 +213,79 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     isRunning = true;
                     sensorManager.registerListener(SensorActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                     //sensorManager.registerListener(SensorActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
-                    //sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
-                    sensorManager.registerListener(SensorActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
-                    sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
+                    sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
+                    if(!PrefUtils.getPrefFSensorKalmanLinearAccelerationEnabled(SensorActivity.this)) {
+                        sensorManager.registerListener(SensorActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
+                    }                    sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
+                    sensorManager.registerListener(SensorActivity.this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
                     fabButton.setEnabled(false);
                     buttonStopCounter.setEnabled(true);
+                    orientationFusionKalman.startFusion();
                 }
 
             }
         });
+        orientationFusionKalman = new OrientationFusedKalman();
+        medianFilter = new MedianFilter();
+        meanFilterAcc = new MeanFilter();
+        lowPassFilter = new LowPassFilter();
+        if(PrefUtils.getPrefMeanFilterSmoothingEnabledAcc(this)){
+            meanFilterAcc.setTimeConstant(PrefUtils.getPrefMeanFilterSmoothingTimeConstantAcc(this));
+        }
+        if(PrefUtils.getPrefMedianFilterSmoothingEnabled(this)){
+            medianFilter.setTimeConstant(PrefUtils.getPrefMedianFilterSmoothingTimeConstant(this));
+        }
+        if(PrefUtils.getPrefLpfSmoothingEnabled(this)){
+            lowPassFilter.setTimeConstant(PrefUtils.getPrefLpfSmoothingTimeConstant(this));
+        }
+        linearAccelerationFilterKalman = new LinearAccelerationFusion(orientationFusionKalman);
+    }
+    private void processAcceleration(float[] rawAcceleration, long acctime) {
+        System.arraycopy(rawAcceleration, 0, this.acceleration_val, 0, this.acceleration_val.length);
+        accTime = acctime;
+    }
+    private void processMagnetic(float[] magnetic) {
+        System.arraycopy(magnetic, 0, this.magnetic, 0, this.magnetic.length);
     }
 
+    private void processRotation(float[] rotation) {
+        System.arraycopy(rotation, 0, this.rotation, 0, this.rotation.length);
+    }
+    private void processQuaternion(double[] _quaternion) {
+        System.arraycopy(_quaternion, 0, this.quaternion, 0, this.quaternion.length);
+    }
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR && !PrefUtils.getPrefFSensorKalmanLinearAccelerationEnabled(this))
         {
             float[] rotationVector = sensorEvent.values;
-            quaternion = stepDetectionAlgorithm.getQuaternion(rotationVector);
+            processQuaternion(stepDetectionAlgorithm.getQuaternion(rotationVector));
         }
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
         {
+            hasAcceleration =true;
+            if(PrefUtils.getPrefMeanFilterSmoothingEnabledAcc(this))
+                processAcceleration(meanFilterAcc.filter(sensorEvent.values),sensorEvent.timestamp);
+            else if(PrefUtils.getPrefMedianFilterSmoothingEnabled(this))
+                processAcceleration(medianFilter.filter(sensorEvent.values),sensorEvent.timestamp);
+            else if(PrefUtils.getPrefLpfSmoothingEnabled(this))
+                processAcceleration(lowPassFilter.filter(sensorEvent.values),sensorEvent.timestamp);
+            else if (!PrefUtils.getPrefMeanFilterSmoothingEnabledAcc(this) && !PrefUtils.getPrefMedianFilterSmoothingEnabled(this) &&
+                    !PrefUtils.getPrefLpfSmoothingEnabled(this))
+                processAcceleration(sensorEvent.values, sensorEvent.timestamp);
             if(quaternion  == null)
                 return;
-            float[] linearAcc = sensorEvent.values;
+            float[] linearAcc = new float[3];
+            System.arraycopy(linearAcceleration, 0, linearAcc, 0, linearAcc.length);
             final float alpha = 0.8f;
             /*gravity[0] = alpha * gravity[0] + (1 - alpha) * sensorEvent.values[0];
             gravity[1] = alpha * gravity[1] + (1 - alpha) * sensorEvent.values[1];
             gravity[2] = alpha * gravity[2] + (1 - alpha) * sensorEvent.values[2];*/
-            float[][] bodyAcc = stepDetectionAlgorithm.GetBodyAcc(linearAcc, quaternion, gravityCons);
+            /*float[][] bodyAcc = stepDetectionAlgorithm.GetBodyAcc(linearAcc, quaternion, gravityCons);
             linearAcc[0] = bodyAcc[0][0];
             linearAcc[1] = bodyAcc[1][0];
-            linearAcc[2] = bodyAcc[2][0];
+            linearAcc[2] = bodyAcc[2][0];*/
+
             float accMag = linearAcc[0] * linearAcc[0] + linearAcc[1] * linearAcc[1] + linearAcc[2] * linearAcc[2];
             accMag = (float) Math.sqrt(accMag);
             mSeries1.appendData(new DataPoint(stepEpoch, accMag),true, 40);
@@ -253,15 +321,31 @@ public class SensorActivity extends Activity implements SensorEventListener {
                         stepState = currentState.No_Steps;
                         //aMin.add(tempMin);
                         lastStepLength = K * (Math.pow(aMax - tempMin, 0.25));
-                        //lastStepD.setText(String.format("%.2f",lastStepLength));
+                        lastStepD.setText(String.format("%.2f",lastStepLength));
                         totalDistance = totalDistance + lastStepLength;
-                        //totalD.setText(String.format("%.2f",totalDistance));
+                        totalD.setText(String.format("%.2f",totalDistance));
                     }
                     ++stepEpoch;
             }
         }
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE)
+        {
+            processRotation(sensorEvent.values);
+            if (PrefUtils.getPrefFSensorKalmanLinearAccelerationEnabled(this)) {
+                if (!orientationFusionKalman.isBaseOrientationSet()) {
+                    if (hasAcceleration && hasMagnetic) {
+                        orientationFusionKalman.setBaseOrientation(RotationUtil.getOrientationVectorFromAccelerationMagnetic(acceleration_val, magnetic));
+                    }
+                } else {
+                    float[] fusedorientation = orientationFusionKalman.calculateFusedOrientation(rotation, sensorEvent.timestamp, acceleration_val, magnetic);
+                    processLinearAcceleration(linearAccelerationFilterKalman.filter(acceleration_val));
+                    processQuaternion(orientationFusionKalman.getQuaternion());
+                }
+            }
+        }
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            processMagnetic(sensorEvent.values);
+            hasMagnetic = true;
         }
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE)
         {
@@ -344,6 +428,10 @@ public class SensorActivity extends Activity implements SensorEventListener {
 
     }
 
+    private void processLinearAcceleration(float[] linAcc) {
+        System.arraycopy(linAcc, 0, this.linearAcceleration, 0, this.linearAcceleration.length);
+    }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
@@ -398,5 +486,30 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 }
                 break;
         }
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.gyroscope, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_reset:
+                break;
+            case R.id.action_config:
+                Intent intent = new Intent();
+                intent.setClass(this, FilterConfigActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.action_help:
+                //showHelpDialog();
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+        return true;
     }
 }

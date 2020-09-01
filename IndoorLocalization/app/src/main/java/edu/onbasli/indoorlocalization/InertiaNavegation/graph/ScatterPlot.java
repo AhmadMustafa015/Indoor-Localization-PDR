@@ -190,6 +190,6 @@ public class ScatterPlot {
         for (double num : yListG)
             if (max < Math.abs(num))
                 max = num;
-        return (Math.abs(max) / 100) * 100 + 100; //rounding up to the nearest hundred
+        return (Math.abs(max) / 100) * 100 + 10; //rounding up to the nearest hundred
     }
 }

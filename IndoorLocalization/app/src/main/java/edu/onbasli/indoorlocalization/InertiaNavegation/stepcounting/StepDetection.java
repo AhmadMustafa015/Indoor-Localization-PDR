@@ -7,14 +7,14 @@ import edu.onbasli.indoorlocalization.InertiaNavegation.extra.ExtraFunctions;
 public class StepDetection {
     private int stepCounter = 0;
     //Global Variable
-    private float[] quaternionMatrix;
+    private double[] quaternionMatrix;
 
     public StepDetection(){
         //defining snesors
-        quaternionMatrix = new float[4];
+        quaternionMatrix = new double[4];
     }
 
-    public float[] getQuaternion(float[] orientationMatix) {
+    public double[] getQuaternion(float[] orientationMatix) {
         double q0 = 1 - Math.pow(orientationMatix[0], 2) - Math.pow(orientationMatix[1], 2) - Math.pow(orientationMatix[2], 2);
         if (q0 > 0)
             quaternionMatrix[0] = (float) Math.sqrt(q0);
@@ -26,7 +26,7 @@ public class StepDetection {
         return quaternionMatrix;
     }
 
-    private static double[][] getRotationMatrix(float[] quaternionVector) {
+    private static double[][] getRotationMatrix(double[] quaternionVector) {
         double[][] rotationMatrix = {{1 - 2 * (Math.pow(quaternionVector[2], 2) + Math.pow(quaternionVector[3], 2)),
                 2 * (quaternionVector[1] * quaternionVector[2] - quaternionVector[0] * quaternionVector[3]),
                 2 * (quaternionVector[1] * quaternionVector[3] + quaternionVector[0] * quaternionVector[2])},
@@ -39,7 +39,7 @@ public class StepDetection {
         return rotationMatrix;
     }
 
-    public float[][] GetBodyAcc(float[] Acc, float[] quaternionVector, float[] gravity) {
+    public float[][] GetBodyAcc(float[] Acc, double[] quaternionVector, float[] gravity) {
         double[][] rotationMatrix = getRotationMatrix(quaternionVector);
         SimpleMatrix m_R_M = new SimpleMatrix(rotationMatrix);
         double[][] acc_M = ExtraFunctions.vectorToMatrix(Acc);

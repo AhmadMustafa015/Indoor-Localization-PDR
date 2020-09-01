@@ -13,7 +13,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -25,6 +25,10 @@
             android:label="Step Detection"
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Material">
+        </activity>
+        <activity android:name=".config.FilterConfigActivity"
+            android:theme="@style/AppTheme"
+            android:screenOrientation="portrait" >
         </activity>
     </application>
 

@@ -19,6 +19,8 @@ android {
 }
 
 dependencies {
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-math3
+    implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation 'com.android.support:appcompat-v7:28.1.1'
     //implementation 'com.android.support:support-v4:28.1.1'
     //implementation 'com.android.support:design:28.1.1'
@@ -29,4 +31,5 @@ dependencies {
     api fileTree(include: ['*.jar'], dir: 'libs')
     api files('src/libs/achartengine-1.2.0.jar')
     api files('src/libs/EJML-core-0.26.jar')
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 }

@@ -83,6 +83,24 @@ public class KalmanFilterSimple {
         // P = (I-kH)P = P - KHP
         P = P.minus(K.mult(H).mult(P));
     }
+    public void update(double[][] Z,double[][] _R) {
+        // a fast way to make the matrices usable by SimpleMatrix
+        SimpleMatrix z = new SimpleMatrix(Z);
+        SimpleMatrix R = new SimpleMatrix(_R);
+
+        // y = z - H x
+        SimpleMatrix y = z.minus(H.mult(x));
+        // S = H P H' + R
+        SimpleMatrix S = H.mult(P).mult(H.transpose()).plus(R);
+        // K = PH'S^(-1)
+        SimpleMatrix K = P.mult(H.transpose().mult(S.invert()));
+
+        // x = x + Ky
+        x = x.plus(K.mult(y));
+
+        // P = (I-kH)P = P - KHP
+        P = P.minus(K.mult(H).mult(P));
+    }
 
     public float[][] getState() {
         return ExtraFunctions.denseMatrixToArray(x.getMatrix());
