@@ -13,27 +13,38 @@ Folders are divided as follows:
 ## Part 1: Activity Recognition
 
 ### Introduction
-In Activity recognition part we develop an deep learning model using tensorflow and an android app to test the trained model. The datasets used in the work is from UCI machine learning reporitory link: https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones and the data collected by Serhat. The detected gystures are (walking, going upstairs, going downstairs, standing, running, elevator, falling, car in or out).The trained model was converted to tensorflow lite file (.tflite) to use in the smartphone. 
+In the Activity recognition part, we develop a deep learning model using TensorFlow and an android app to test the trained model. The datasets used in the work are from UCI machine learning repository link: https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones and the data collected by Serhat. The detected gestures are (walking, going upstairs, going downstairs, standing, running, elevator, falling, car in or out). The trained model was converted to a tensorflow lite file (.tflite) to use in the smartphone. 
 
-There are three training phases was done using the final model at each stage we try defferent datasets and features to enhance the confusion matrix and therefor enhance the overall system.
+Three training phases were done using the final model at each stage we try different datasets and features to enhance the confusion matrix and therefore enhance the overall system.
 
-#### * First training phase: 
+#### First training phase: 
 Datasets: using Serhat collected dataset + UCI dataset. 
 
-The features: features that used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration).
+The features: features that are used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration).
 
 Results: Training accuracy: 97.57% >>> Validation accuracy: 96.59% >>> Test accuracy: 96.81%
+
 ![Picture1](https://user-images.githubusercontent.com/43111249/92290014-4a6c7a00-ef1b-11ea-90d7-e8ca61b028f7.png)
 
-There are three main training phases
+#### Second training phase: 
+Datasets: using Serhat collected dataset only
 
+The features: features that are used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration).
 
+Results: Training accuracy: 88.52% >>> Validation accuracy: 86.89% >>> Test accuracy: 87.42%
 
+#### Third training phase: 
+Datasets: using Serhat collected dataset only
 
+The features: features that used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration, magnetometer X, magnetometer Y, magnetometer Z).
 
+Results: Training accuracy: 96.02% >>> Validation accuracy: 95.97% >>> Test accuracy: 98.11%
 
+![Picture2](https://user-images.githubusercontent.com/43111249/92290029-55bfa580-ef1b-11ea-8314-441537567300.png)
 
+As seen using the magnetometer helped in reducing the confusion between the Fallin the Elevator gestures.
 
+#### Important note: unfortunately only Serhat collected data has magnetometer readings so in the final version we couldn't use the UCI dataset. Also, the Serhat collected data from foot only, so to have more accurate results in real-time applications, more data need to be collected from different people. Besides, the collected data need to be collected from different positions (for example waist, pocket, handheld).
 
 ## Part 2: Indoor Localization Based on Pedestrian Dead Reckoning (PDR)
 
