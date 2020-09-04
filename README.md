@@ -10,7 +10,22 @@ Folders are divided as follows:
 * References: this folder contains the reference papers used as a foundation for this work.
 * stepDetectionAndStepEstimation: the folder that contains the android app for the step counting, stride length estimation, and floor detection algorithm.
 
-# Part 1: Activity Recognition
+## Part 1: Activity Recognition
+
+### Introduction
+In Activity recognition part we develop an deep learning model using tensorflow and an android app to test the trained model. The datasets used in the work is from UCI machine learning reporitory link: https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones and the data collected by Serhat. The detected gystures are (walking, going upstairs, going downstairs, standing, running, elevator, falling, car in or out).The trained model was converted to tensorflow lite file (.tflite) to use in the smartphone. 
+
+There are three training phases was done using the final model at each stage we try defferent datasets and features to enhance the confusion matrix and therefor enhance the overall system.
+
+#### * First training phase: 
+Datasets: using Serhat collected dataset + UCI dataset. 
+
+The features: features that used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration).
+
+Results: Training accuracy: 97.57% >>> Validation accuracy: 96.59% >>> Test accuracy: 96.81%
+![Picture1](https://user-images.githubusercontent.com/43111249/92290014-4a6c7a00-ef1b-11ea-90d7-e8ca61b028f7.png)
+
+There are three main training phases
 
 
 
@@ -20,5 +35,5 @@ Folders are divided as follows:
 
 
 
-# Part 2: Indoor Localization Based on Pedestrian Dead Reckoning (PDR)
+## Part 2: Indoor Localization Based on Pedestrian Dead Reckoning (PDR)
 
