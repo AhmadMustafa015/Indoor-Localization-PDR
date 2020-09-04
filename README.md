@@ -3,13 +3,12 @@ This repository contains a dataset for activity recognition, a Jupyter notebook 
 
 Folders are divided as follows:
 
-1- Documentation: this folder contains a report which describes the technical details of the algorithm and filters that are used in the indoor localization app.
-
-2- Human Activity Recognition: this folder contains the python scripts for the activity recognition training model, the dataset, and the pre-processing Jupyter notebook. Also, it contains presentation files that describe the models used and the results of the training.
-3- IndoorLocalization: this folder contains the codes for the indoor navigation android app.
-4- MVP: this folder has multiple videos to describe the app and how to use it (note the app version in the videos is an old one, the newer version has many updates).
-5- References: this folder contains the reference papers used as a foundation for this work.
-6- stepDetectionAndStepEstimation: the folder that contains the android app for the step counting, stride length estimation, and floor detection algorithm.
+* Documentation: this folder contains a report which describes the technical details of the algorithm and filters that are used in the indoor localization app.
+* Human Activity Recognition: this folder contains the python scripts for the activity recognition training model, the dataset, and the pre-processing Jupyter notebook. Also, it contains presentation files that describe the models used and the results of the training.
+* IndoorLocalization: this folder contains the codes for the indoor navigation android app.
+* MVP: this folder has multiple videos to describe the app and how to use it (note the app version in the videos is an old one, the newer version has many updates).
+* References: this folder contains the reference papers used as a foundation for this work.
+* stepDetectionAndStepEstimation: the folder that contains the android app for the step counting, stride length estimation, and floor detection algorithm.
 
 # Part 1: Activity Recognition
 
