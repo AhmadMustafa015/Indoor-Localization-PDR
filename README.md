@@ -51,7 +51,7 @@ As seen using the magnetometer helped in reducing the confusion between the Fall
 ### Inroduction
 The indoor localization app is based on Pedestrian Dead Reckoning (PDR), which uses a step detection and stride length estimation algorithm to count the number of steps and the length of each step taken. To comput the heading (the angle from the true north) we use direct cosin matrix to calculate the tilt angle. The computed angle used to orient each step to the corrected direction. To track and see the results the app used two methods, first the app store all the data in as CSV files the stored file have the x-y position for each step. Moreover, the app draw a real time graph to visualize the movement as a 2-D graph.
 
-![pic2](https://user-images.githubusercontent.com/43111249/92305713-63644200-ef92-11ea-8f53-5e1bc9c24b6d.png)
+![pic2_1](https://user-images.githubusercontent.com/43111249/92306364-28184200-ef97-11ea-985a-dc50b0a2f2c8.png)
 
 The app is divided to muliple packages:
 1- Activity: this package contains three classes each represent a call to start a set of functions. The classes available are:
