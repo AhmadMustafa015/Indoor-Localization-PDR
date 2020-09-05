@@ -15,14 +15,12 @@ import edu.onbasli.indoorlocalization.InertiaNavegation.filewriting.DataFileWrit
 
 public class FloorDetection {
 
-    private static final String FOLDER_NAME = "Floor_detect";
+    private static final String FOLDER_NAME = "Pedestrian_Dead_Reckoning/Floor_detect";
     private static final String[] DATA_FILE_NAMES = {
-            "Floor_Detect",
-            "Acceleration"
+            "Floor_Detect"
     };
     private static final String[] DATA_FILE_HEADINGS = {
-            "Barometer,currentAvg,AvgBefore_2_Second,Pstart,Pend,CurrentFloor",
-            "Acceleration" + "\n" + "t,Ax,Ay,Az,stepState"
+            "Barometer,currentAvg,AvgBefore_2_Second,Pstart,Pend,CurrentFloor"
     };
     private DataFileWriter dataFileWriter;
 
