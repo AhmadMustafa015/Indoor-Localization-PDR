@@ -14,13 +14,6 @@
         android:theme="@style/TextAppearance.AppCompat.Display3"
         tools:replace="android:icon">
         <activity
-            android:name=".InertiaNavegation.activity.StepCalibrationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_calibration"
-            android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Material" >
-        </activity>
-        <activity
             android:name=".InertiaNavegation.activity.GraphActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_graph"

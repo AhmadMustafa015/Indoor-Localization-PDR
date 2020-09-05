@@ -216,7 +216,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
                     if(!PrefUtils.getPrefFSensorKalmanLinearAccelerationEnabled(SensorActivity.this)) {
                         sensorManager.registerListener(SensorActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
-                    }                    sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
+                    }
+                    sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
                     sensorManager.registerListener(SensorActivity.this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
                     fabButton.setEnabled(false);
                     buttonStopCounter.setEnabled(true);

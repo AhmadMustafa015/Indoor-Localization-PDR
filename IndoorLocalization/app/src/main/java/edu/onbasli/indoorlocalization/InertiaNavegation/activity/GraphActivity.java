@@ -36,6 +36,7 @@ import edu.onbasli.indoorlocalization.InertiaNavegation.extra.KalmanFilterSimple
 import edu.onbasli.indoorlocalization.InertiaNavegation.filters.LowPassFilter;
 import edu.onbasli.indoorlocalization.InertiaNavegation.filters.MeanFilter;
 import edu.onbasli.indoorlocalization.InertiaNavegation.filters.MedianFilter;
+import edu.onbasli.indoorlocalization.InertiaNavegation.floorDetection.FloorDetection;
 import edu.onbasli.indoorlocalization.InertiaNavegation.stepcounting.StepDetection;
 import edu.onbasli.indoorlocalization.R;
 import edu.onbasli.indoorlocalization.InertiaNavegation.extra.ExtraFunctions;
@@ -127,6 +128,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     private float gyroHeading;
     private float magHeading;
     private float kalmanHeading;
+    private Sensor sensorPressure;
 
     private long startTime;
     private boolean firstRun;
@@ -168,7 +170,9 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     private OrientationFusedKalman orientationFusionKalman;
     private LinearAccelerationFusion linearAccelerationFilterKalman;
     private static float[] linearAcceleration = new float[3];
-
+    PackageManager Pmanager;
+    boolean hasBarometer = false;
+    FloorDetection detectFloor;
     private OrientationFusedComplementary orientationFusedComplementary;
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -177,7 +181,8 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         setContentView(R.layout.activity_graph);
         totalSteps = 0;
         gyroRotationMatrix = new float[3][3];
-
+        Pmanager = getPackageManager();
+        hasBarometer = Pmanager.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER);
         // get location permission
         /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -322,11 +327,6 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     dataFileWriter.writeToFile("Initial_Orientation", "init_Orientation: " + Arrays.deepToString(initialOrientation));
                     dataFileWriter.writeToFile("Initial_Orientation", "init_Heading: " + initialHeading);
 
-//                Log.d("init_heading", "" + initialHeading);
-
-                    //TODO: fix rotation matrix
-                    //gyroscopeEulerOrientation = new GyroscopeEulerOrientation(initialOrientation);
-
                     gyroscopeEulerOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
 
                     dataFileWriter.writeToFile("XY_Data_Set", "Initial_orientation: " +
@@ -336,9 +336,78 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", "Magnetic_field_bias:" +
                             Arrays.toString(magBias));
 
+                    if(hasBarometer)
+                    {
+                        detectFloor = new FloorDetection();
+                        sensorManager.registerListener(GraphActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
+                    }
+                    else
+                    {
+                        Toast.makeText(GraphActivity.this, "No Barometer Sensor Detected, Floor Detection can't be started!", Toast.LENGTH_SHORT).show();
+                    }
+                    if (isCalibrated) {
+                        sensorManager.registerListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
+                                SensorManager.SENSOR_DELAY_FASTEST);
+                        sensorManager.registerListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
+                                SensorManager.SENSOR_DELAY_FASTEST);
+                    } else {
+                        sensorManager.registerListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                                SensorManager.SENSOR_DELAY_FASTEST);
+                        sensorManager.registerListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                                SensorManager.SENSOR_DELAY_FASTEST);
+                    }
+
+                    if (usingDefaultCounter) {
+                        sensorManager.registerListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR),
+                                SensorManager.SENSOR_DELAY_FASTEST);
+                    } else {
+                        sensorManager.registerListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                                SensorManager.SENSOR_DELAY_FASTEST);
+                    }
+                    if(!PrefUtils.getPrefKalmanFilterAccEnabled(GraphActivity.this))
+                    {
+                        sensorManager.registerListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+                                SensorManager.SENSOR_DELAY_FASTEST);
+                    }
                     fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
 
                 } else {
+                    if (isCalibrated) {
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED));
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED));
+                    } else {
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE));
+                    }
+
+                    if (usingDefaultCounter) {
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR));
+                    } else {
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
+                    }
+                    if(hasBarometer) {
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE));
+                    }
+                    if(!PrefUtils.getPrefKalmanFilterAccEnabled(GraphActivity.this))
+                    {
+                        sensorManager.unregisterListener(GraphActivity.this,
+                                sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
+                    }
+                    isRunning = false;
 
                     fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_play_arrow_black_24dp));
 
@@ -398,6 +467,34 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     protected void onStop() {
         super.onStop();
         sensorManager.unregisterListener(this);
+        if (isCalibrated) {
+            sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED));
+                    sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED));
+        } else {
+            sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
+                    sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE));
+        }
+
+        if (usingDefaultCounter) {
+            sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR));
+        } else {
+            sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
+        }
+        if(hasBarometer) {
+            sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE));
+        }
+        if(!PrefUtils.getPrefKalmanFilterAccEnabled(this))
+        {
+            sensorManager.unregisterListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
+        }
     }
     @Override
     protected void onPause() {
@@ -413,8 +510,6 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         super.onResume();
 
         if (isRunning) {
-
-            // get location permission
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -451,7 +546,17 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                         SensorManager.SENSOR_DELAY_FASTEST);
             }
-
+            if(hasBarometer) {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE),
+                        SensorManager.SENSOR_DELAY_NORMAL);
+            }
+            if(!PrefUtils.getPrefKalmanFilterAccEnabled(this))
+            {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            }
             fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
 
         } else {
@@ -762,6 +867,13 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     else
                         dataValues.add(2f);
                     dataFileWriter.writeToFile("Acceleration", dataValues);
+                }
+            }
+            if(event.sensor.getType() == Sensor.TYPE_PRESSURE)
+            {
+                if(hasBarometer)
+                {
+                    detectFloor.GetFloorNum(event.values[0]);
                 }
             }
         }
