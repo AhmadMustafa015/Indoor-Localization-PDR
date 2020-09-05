@@ -84,10 +84,10 @@ The app is divided to muliple packages:
 The app settings used for optaining these results are Kalman filtered enable for fusion and for linear acceleration and low pass filter.
 
 Figure 1: Linear acceleration before and after filtering
-![FullTest_distance235 83](https://user-images.githubusercontent.com/43111249/92309766-02983200-efb1-11ea-9eda-88c17c1f2335.png)
+![groundTruthAcc](https://user-images.githubusercontent.com/43111249/92309775-0cba3080-efb1-11ea-9646-d8b6ab3275b7.png)
 
 Figure 2: The calculated tilt angle with and without filtering
 ![KalmanFilterHeading](https://user-images.githubusercontent.com/43111249/92309772-075ce600-efb1-11ea-9226-8eead077958f.png)
 
 Figure 3: Walking for 235.8 meters and the drift between the starting and final point is less than 3 meters
-![groundTruthAcc](https://user-images.githubusercontent.com/43111249/92309775-0cba3080-efb1-11ea-9646-d8b6ab3275b7.png)
+![FullTest_distance235 83](https://user-images.githubusercontent.com/43111249/92309766-02983200-efb1-11ea-9eda-88c17c1f2335.png)
