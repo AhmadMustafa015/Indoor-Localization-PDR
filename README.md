@@ -1,71 +1,81 @@
-# Indoor-Localization-PDR
-## This repository contains an android navigation App based on Pedestrian Dead Reckoning (PDR) algorithms. 
+# Activity Recognition & Indoor Localization
+This repository contains a dataset for activity recognition, a Jupyter notebook for a full data pre-processing and filtering on the dataset, multiple deep neural networks with LSTM layer for human activity prediction, a hyperparameter tuning algorithm to optimize the deep learning model, an android app for activity recognition that equipped with the pre-trained model as a TensorFlow lite file (.tflite) and an android app for step counting and floor estimation. Moreover, a full indoor navigation solution that built and tested on the android environment.
 
-how it works?
-first calculate the bias for gyro and magnetometer:
-1- gyro: put your phone on a flate surface for number of trials = 600: 
-at first trials the gyroBias = raw gyro
-for the other trials the bias is calculated from taking the moving avg for all the gyro data.
-at the end we will have a gyroBias array with 3 float data. // TODO: calulate better bias
-2- magnetometer: the objective here is to calculate the hard iron error [vx,vy,vz] and the magnatic field stregth the equation which have all those parameter is:
-B = [B0,B1,B2,B3] = [2vx,2vy,2vz,B2-Vx2-vy2-vz2]
-locus of magnetometer measurements represents the primary information available to the
-calibration algorithms to determine the hard- and soft-iron calibration V and W-1. Under arbitrary rotation
-of the smartphone by its owner. //TODO: implement soft iron equation 10 parameter to find
-From Pg. 14 of "Calibrating an eCompass in the Presence of Hard and Soft-iron Interference, Rev. 3" we need to calculate 
-β (XTX) –1= XTY β is the solution vector from which the four calibration parameters can be easily determined
-if first run  reserveX = rawMagneticValues[0];
-            reserveY = rawMagneticValues[1];
-            reserveZ = rawMagneticValues[2];
-else 	x = reserveX;
-            y = reserveY;
-            z = reserveZ;
+Folders are divided as follows:
 
-            reserveX = rawMagneticValues[0];
-            reserveY = rawMagneticValues[1];
-            reserveZ = rawMagneticValues[2];
-XTX = new double[][]{{XTX[0][0] + x * x, XTX[0][1] + x * y, XTX[0][2] + x * z, XTX[0][3] + x},
-                             {XTX[1][0] + x * y, XTX[1][1] + y * y, XTX[1][2] + y * z, XTX[1][3] + y},
-                             {XTX[2][0] + x * z, XTX[2][1] + y * z, XTX[2][2] + z * z, XTX[2][3] + z},
-                             {XTX[3][0] + x,     XTX[3][1] + y,     XTX[3][2] + z,     XTX[3][3] + 1}};
+* Documentation: this folder contains a report which describes the technical details of the algorithm and filters that are used in the indoor localization app.
+* Human Activity Recognition: this folder contains the python scripts for the activity recognition training model, the dataset, and the pre-processing Jupyter notebook. Also, it contains presentation files that describe the models used and the results of the training.
+* IndoorLocalization: this folder contains the codes for the indoor navigation android app.
+* MVP: this folder has multiple videos to describe the app and how to use it (note the app version in the videos is an old one, the newer version has many updates).
+* References: this folder contains the reference papers used as a foundation for this work.
+* stepDetectionAndStepEstimation: the folder that contains the android app for the step counting, stride length estimation, and floor detection algorithm.
 
-        XTY = new double[][] {{XTY[0][0] + x * (x * x + y * y + z * z)},
-                              {XTY[1][0] + y * (x * x + y * y + z * z)},
-                              {XTY[2][0] + z * (x * x + y * y + z * z)},
-                              {XTY[3][0] + (x * x + y * y + z * z)}};
-After we have XTX and XTY we can calculate B
-at the end we will return xBias, yBias,zBias, magFieldStrength (array of 4 float)
+## Part 1: Activity Recognition
 
-find stepCounter sensitivity?
-Now when we click the button:
-first get intial heading with repect to earth using magnetometer data
-float[][] initialOrientation = MagneticFieldOrientation.getOrientationMatrix(currGravity, currMag, magBias);
-initialHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
-inside MagneticFieldOrientation.getOrientationMatrix:
-first remove bias by subtract magnX - magnXBias ...
-Then convert to matrix {{array[0]},{array[1]},{array[2]}}
-This application note uses the industry standard “NED” (North, East, Down) coordinate system to label
-axes on the mobile phone and the IMU use ENU a simple conversion by using this matrix
-{{0,1,0},
-{1,0,0},
-{0,0,-1}}
-we did the rotation for gravity vector and magnatometer
-then calculate the roll and pitch angle from the gravity as specified in the report:
-double G_r = Math.atan2(G_m_values[1][0], G_m_values[2][0]);
-double G_p = Math.atan2(-G_m_values[0][0], G_m_values[1][0] * Math.sin(G_r) + G_m_values[2][0] * Math.cos(G_r));
-With the angles roll and pitch known from the accelerometer, the magnetometer reading can be de-rotated to
-correct for the phone orientation using:  R_rp = {{Math.cos(G_p), Math.sin(G_p) * Math.sin(G_r), Math.sin(G_p) * Math.cos(G_r)},
-                            {0, Math.cos(G_r), -Math.sin(G_r)},
-                            {-Math.sin(G_p), Math.cos(G_p) * Math.sin(G_r), Math.cos(G_p) * Math.cos(G_r)}};
-rotationMatrix * biasedMagnatometer = The vector represent the components of the magnetometer sensor after correcting for the Hard-Iron
-offset and after de-rotating to the flat plane where θ = φ = 0.
+### Introduction
+In the Activity recognition part, we develop a deep learning model using TensorFlow and an android app to test the trained model. The datasets used in the work are from UCI machine learning repository link: https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones and the data collected by Serhat. The detected gestures are (walking, going upstairs, going downstairs, standing, running, elevator, falling, car in or out). The trained model was converted to a tensorflow lite file (.tflite) to use in the smartphone. 
 
-h = -1*(Math.atan2(-m_M_rp.get(1), m_M_rp.get(0)) + 11.0 * Math.PI/180.0); in rad
-allows solution for the yaw angle ψ where ψ is computed relative to magnetic north. The yaw
-angle ψ is therefore the required tilt-compensated eCompass heading.
-we added to this angle a magnetic declination because of the differance in north and true north ex in Turkey 5.72. we multiply the angle by -1 so that if we move 
-to the east the angle will be -ve if we move to the west it will be +ve.
-After this we calculate the rotation matrix from yaw and then multiply the biased magnetometer with the rotation matrix the result will be return.
-Also tan-1 of the orientationMatrix[1],[0] is used to return the heading.
-next step save intial oriantation data (init_Gravity,init_Mag,mag_Bias,gyro_Bias,init_Orientation,init_Heading)
+Three training phases were done using the final model at each stage we try different datasets and features to enhance the confusion matrix and therefore enhance the overall system.
 
+#### First training phase: 
+Datasets: using Serhat collected dataset + UCI dataset. 
+
+The features: features that are used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration).
+
+Results: Training accuracy: 97.57% >>> Validation accuracy: 96.59% >>> Test accuracy: 96.81%
+
+![Picture1](https://user-images.githubusercontent.com/43111249/92290014-4a6c7a00-ef1b-11ea-90d7-e8ca61b028f7.png)
+
+#### Second training phase: 
+Datasets: using Serhat collected dataset only
+
+The features: features that are used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration).
+
+Results: Training accuracy: 88.52% >>> Validation accuracy: 86.89% >>> Test accuracy: 87.42%
+
+#### Third training phase: 
+Datasets: using Serhat collected dataset only
+
+The features: features that used in this part are (acceleration X, acceleration Y, acceleration Z, gyroscope X, gyroscope Y, gyroscope Z, body acceleration X, body acceleration Y, body acceleration Z, RMS acceleration, RMS gyroscope, RMS body acceleration, magnetometer X, magnetometer Y, magnetometer Z).
+
+Results: Training accuracy: 96.02% >>> Validation accuracy: 95.97% >>> Test accuracy: 98.11%
+
+![Picture2](https://user-images.githubusercontent.com/43111249/92290029-55bfa580-ef1b-11ea-8314-441537567300.png)
+
+As seen using the magnetometer helped in reducing the confusion between the Fallin the Elevator gestures.
+
+#### Important note: unfortunately only Serhat collected data has magnetometer readings so in the final version we couldn't use the UCI dataset. Also, the Serhat collected data from foot only, so to have more accurate results in real-time applications, more data need to be collected from different people. Besides, the collected data need to be collected from different positions (for example waist, pocket, handheld).
+
+## Part 2: Indoor Localization Based on Pedestrian Dead Reckoning (PDR)
+
+### Inroduction
+The indoor localization app is based on Pedestrian Dead Reckoning (PDR), which uses a step detection and stride length estimation algorithm to count the number of steps and the length of each step taken. To comput the heading (the angle from the true north) we use direct cosin matrix to calculate the tilt angle. The computed angle used to orient each step to the corrected direction. To track and see the results the app used two methods, first the app store all the data in as CSV files the stored file have the x-y position for each step. Moreover, the app draw a real time graph to visualize the movement as a 2-D graph.
+
+![pic2_2](https://user-images.githubusercontent.com/43111249/92306391-73caeb80-ef97-11ea-8b26-23fdb21e3294.png)
+
+The app is divided to muliple packages:
+1- Activity: this package contains three classes each represent a call to start a set of functions. The classes available are:
+* UserListActivity: this is the initial class, you can added multiple users. By clicking on the username you will start next activity.
+* UserActivity: to control each user that been created.
+* GraphActivity: this is the main class which start positioning tracking and store all the data on the phone as CSV file.
+2- Bias: it contains two class to calculate the bias from each sensor.
+
+3- Dialog: this package contains an important dialogs for the app. The most important dialog is the calibration dialog which will going to give you an option to use the calibrated sensor (choosing auto) or the uncalibrated sensors (manually) to calibrate the sensor using our calibration algorithms.
+
+4- Extra: this package contains an extra functions class which have some useful mathmatical functions. In this folder there are two Kalman filter class used in the previous version, but the one that have been used in the final version is in the OrientationFusionKalman package (more optimised).
+
+5- Filewriting: in this package the classes used to write the CSV files in the device storage.
+
+6- Filters: this package contains a three class for a common filters which are (low pass filter, mean filter and median filter).
+
+7- Graph: this package contains the class for a real time graph to track and plot the user position.
+
+8- Orientation: this package contains a main classes to compute the orientation from the gyroscope and magnetometer raw data.
+
+9- OrientationFusedKalman: in this package there is a Kalman filter implementation and the complimantary filter as well. The filters worked based on fusion both of gyroscope orientation and magnetometer orientation.
+
+10- Prefs: it contains the class responsable on choosing the prefered filter
+
+11- StepCounting: this package contains the step counting algorithm as well as the stride length estimation.
+
+12- FloorDetection: this package contains the floor detection algorithm.
