@@ -48,3 +48,34 @@ As seen using the magnetometer helped in reducing the confusion between the Fall
 
 ## Part 2: Indoor Localization Based on Pedestrian Dead Reckoning (PDR)
 
+### Inroduction
+The indoor localization app is based on Pedestrian Dead Reckoning (PDR), which uses a step detection and stride length estimation algorithm to count the number of steps and the length of each step taken. To comput the heading (the angle from the true north) we use direct cosin matrix to calculate the tilt angle. The computed angle used to orient each step to the corrected direction. To track and see the results the app used two methods, first the app store all the data in as CSV files the stored file have the x-y position for each step. Moreover, the app draw a real time graph to visualize the movement as a 2-D graph.
+
+![pic2](https://user-images.githubusercontent.com/43111249/92305713-63644200-ef92-11ea-8f53-5e1bc9c24b6d.png)
+
+The app is divided to muliple packages:
+1- Activity: this package contains three classes each represent a call to start a set of functions. The classes available are:
+* UserListActivity: this is the initial class, you can added multiple users. By clicking on the username you will start next activity.
+* UserActivity: to control each user that been created.
+* GraphActivity: this is the main class which start positioning tracking and store all the data on the phone as CSV file.
+2- Bias: it contains two class to calculate the bias from each sensor.
+
+3- Dialog: this package contains an important dialogs for the app. The most important dialog is the calibration dialog which will going to give you an option to use the calibrated sensor (choosing auto) or the uncalibrated sensors (manually) to calibrate the sensor using our calibration algorithms.
+
+4- Extra: this package contains an extra functions class which have some useful mathmatical functions. In this folder there are two Kalman filter class used in the previous version, but the one that have been used in the final version is in the OrientationFusionKalman package (more optimised).
+
+5- Filewriting: in this package the classes used to write the CSV files in the device storage.
+
+6- Filters: this package contains a three class for a common filters which are (low pass filter, mean filter and median filter).
+
+7- Graph: this package contains the class for a real time graph to track and plot the user position.
+
+8- Orientation: this package contains a main classes to compute the orientation from the gyroscope and magnetometer raw data.
+
+9- OrientationFusedKalman: in this package there is a Kalman filter implementation and the complimantary filter as well. The filters worked based on fusion both of gyroscope orientation and magnetometer orientation.
+
+10- Prefs: it contains the class responsable on choosing the prefered filter
+
+11- StepCounting: this package contains the step counting algorithm as well as the stride length estimation.
+
+12- FloorDetection: this package contains the floor detection algorithm.
