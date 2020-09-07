@@ -56,6 +56,7 @@ public class FloorDetection {
     public FloorDetection()
     {
         areFilesCreated = false;
+        avgReadings = new Vector<Float>();
         createFiles();
     }
 

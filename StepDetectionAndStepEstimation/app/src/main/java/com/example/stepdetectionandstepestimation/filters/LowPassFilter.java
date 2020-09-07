@@ -7,7 +7,7 @@ public class LowPassFilter extends AveragingFilter
     // Gravity and linear accelerations components for the
     // Wikipedia low-pass fusedOrientation
     private float[] output;
-
+    private float output_single;
     public LowPassFilter() {
         this(DEFAULT_TIME_CONSTANT);
     }
@@ -50,7 +50,29 @@ public class LowPassFilter extends AveragingFilter
 
         return output;
     }
+    public float filter(float values)
+    {
+        // Initialize the start time.
+        if (startTime == 0)
+        {
+            startTime = System.nanoTime();
+        }
 
+        timestamp = System.nanoTime();
+
+        // Find the sample period (between updates) and convert from
+        // nanoseconds to seconds. Note that the sensor delivery rates can
+        // individually vary by a relatively large time frame, so we use an
+        // averaging technique with the number of sensor updates to
+        // determine the delivery rate.
+        float dt = 1 / (count++ / ((timestamp - startTime) / 1000000000.0f));
+
+        float alpha = timeConstant / (timeConstant + dt);
+
+        output_single = alpha * output_single + (1 - alpha) * values;
+
+        return output_single;
+    }
     @Override
     public float[] getOutput() {
         return output;
@@ -66,6 +88,7 @@ public class LowPassFilter extends AveragingFilter
         super.reset();
         this.output = new float[]
                 { 0, 0, 0 };
+        this.output_single = 0;
 
     }
 }

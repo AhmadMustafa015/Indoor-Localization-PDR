@@ -174,7 +174,6 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     boolean hasBarometer = false;
     FloorDetection detectFloor;
     private OrientationFusedComplementary orientationFusedComplementary;
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -305,6 +304,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                 PlottingSteps(accTime);
             }};*/
         //setting up buttons
+        sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         fabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -211,14 +211,14 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 if (!isRunning) {
                     createFiles();
                     isRunning = true;
-                    sensorManager.registerListener(SensorActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                    /*sensorManager.registerListener(SensorActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                     //sensorManager.registerListener(SensorActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
                     sensorManager.registerListener(SensorActivity.this, sensorMagnaticField, SensorManager.SENSOR_DELAY_FASTEST);
                     if(!PrefUtils.getPrefFSensorKalmanLinearAccelerationEnabled(SensorActivity.this)) {
                         sensorManager.registerListener(SensorActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
-                    }
+                    }*/
                     sensorManager.registerListener(SensorActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
-                    sensorManager.registerListener(SensorActivity.this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+                    //sensorManager.registerListener(SensorActivity.this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
                     fabButton.setEnabled(false);
                     buttonStopCounter.setEnabled(true);
                     orientationFusionKalman.startFusion();
@@ -350,6 +350,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
         }
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE)
         {
+            float pressureVal = sensorEvent.values[0];
+  //          float [] pressureVals = medianFilter.filter(new float[]{pressureVal, 0, 0});
+      //      pressureVal = pressureVals[0];
             if(sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null)
             {
                 hight_p.setText("NaN");
@@ -360,7 +363,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             //final float deltaTU = currentTime - lastUpdateTime;
             if(avgReadings.size() < timeToAverage)
             {
-                avgReadings.add(sensorEvent.values[0]); //pt
+                avgReadings.add(pressureVal); //pt
             }
             else {
                 avgT_0 = 0;
@@ -384,7 +387,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                                 pstart = avgT_5;
                                 enterLoop2 = true;
                                 num1 = 0;
-                                //lastStepD.setText(String.format("%.2f", pstart));
+                                lastStepD.setText(String.format("%.2f", pstart));
                             }
                             else
                                 ++num1;
@@ -401,7 +404,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                                 num2 = 0;
                                 currentFloor += Math.round((1/h0) * eqConst * (1+segma * temperature) * Math.log10(pstart/pend));
                                 floorNum.setText(String.valueOf(currentFloor));
-                                //totalD.setText(String.format("%.2f", pend));
+                                totalD.setText(String.format("%.2f", pend));
                             }
                             else
                                 ++num2;
@@ -415,7 +418,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 ++currentTime;
             }
             dataFileWriter.writeToFile("Floor_Detect",
-                    (float) sensorEvent.values[0],
+                    (float) pressureVal,
                     avgT_0,
                     avgT_2,
                     pstart,
@@ -423,7 +426,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     (float) currentFloor);
 
 
-                    hight_p.setText(String.format("%.2f", sensorEvent.values[0]));
+                    hight_p.setText(String.format("%.2f", pressureVal));
 
         }
 
@@ -454,12 +457,12 @@ public class SensorActivity extends Activity implements SensorEventListener {
 
         //    sensorManager.registerListener(SensorActivity.this,
         //            sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),sensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(SensorActivity.this,
+           /* sensorManager.registerListener(SensorActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_FASTEST);
             //sensorManager.registerListener(SensorActivity.this,
             //        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_FASTEST);
             sensorManager.registerListener(SensorActivity.this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);*/
         }
     }
     private void createFiles() {

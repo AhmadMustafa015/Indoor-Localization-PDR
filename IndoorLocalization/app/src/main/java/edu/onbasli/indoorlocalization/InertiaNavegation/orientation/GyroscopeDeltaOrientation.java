@@ -55,7 +55,6 @@ public class GyroscopeDeltaOrientation {
         for (int i = 0; i < 3; i++)
             unbiasedGyroValues[i] = rawGyroValues[i] - gyroBias[i];
 
-        //TODO: check how big of a difference this makes
         //applying a quick high pass filter
         for (int i = 0; i < 3; i++)
             if (Math.abs(unbiasedGyroValues[i]) > sensitivity)
