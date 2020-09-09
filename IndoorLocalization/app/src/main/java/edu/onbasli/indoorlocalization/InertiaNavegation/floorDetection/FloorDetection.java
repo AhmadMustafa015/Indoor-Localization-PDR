@@ -42,7 +42,8 @@ public class FloorDetection {
     private TextView floorNum;
     private float currentTime = 0;
     private final float thetaT = 0.01f; //hpa
-    private int N0 , N1 = 5; //to remove ping-pong effect
+    private int N0 =  5; //to remove ping-pong effect
+    private int N1 =  3; //to remove ping-pong effect
     private int num1, num2 = 0; // counters
     private boolean enterLoop2 = false;
     private int upORdown = 0; //1 means up 2 means down
