@@ -21,7 +21,7 @@ import edu.onbasli.indoorlocalization.InertiaNavegation.activity.GraphActivity;
 public class SensorCalibrationDialogFragment extends DialogFragment {
 
     //public static final String DIALOG_MESSAGE = "Calibrate phone manually, or press \"Auto\" to use Android-calibrated sensors.";
-    public static final String DIALOG_MESSAGE = "To calibrate phone press calibrate:";
+    public static final String DIALOG_MESSAGE = "Press start to begin: ";
     private static float[] gyroBias;
     private static float[] magBias;
     private static float[] accBiasX;
@@ -42,13 +42,13 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
         dialogBuilder
                 .setMessage(DIALOG_MESSAGE)
-                .setNegativeButton("Calibrate", new DialogInterface.OnClickListener() {
+                /*.setNegativeButton("Calibrate", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //this onClick() will be overridden during onStart()
                     }
-                })
-                .setPositiveButton("Auto", new DialogInterface.OnClickListener() {
+                })*/
+                .setPositiveButton("Start", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //this onClick() will be overridden during onStart()
@@ -68,14 +68,14 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
         AlertDialog alertDialog = (AlertDialog)getDialog();
 
         if (alertDialog != null) {
-            Button negativeButton = alertDialog.getButton(Dialog.BUTTON_NEGATIVE);
+            /*Button negativeButton = alertDialog.getButton(Dialog.BUTTON_NEGATIVE);
             negativeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     isCalibrating = CALIBRATING;
                     startCalibrationDialogs();
                 }
-            });
+            });*/
 
             Button positiveButton = alertDialog.getButton(Dialog.BUTTON_POSITIVE);
             positiveButton.setOnClickListener(new View.OnClickListener() {

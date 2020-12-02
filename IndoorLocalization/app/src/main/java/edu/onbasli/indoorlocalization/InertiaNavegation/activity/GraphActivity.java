@@ -7,12 +7,15 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +24,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
@@ -47,7 +56,7 @@ import edu.onbasli.indoorlocalization.InertiaNavegation.orientation.GyroscopeEul
 import edu.onbasli.indoorlocalization.InertiaNavegation.orientation.MagneticFieldOrientation;
 import edu.onbasli.indoorlocalization.InertiaNavegation.prefs.PrefUtils;
 
-public class GraphActivity extends AppCompatActivity implements SensorEventListener{
+public class GraphActivity extends AppCompatActivity implements SensorEventListener {
     private static final float GYROSCOPE_INTEGRATION_SENSITIVITY = 0.0025f;
 
     private static final String FOLDER_NAME = "Pedestrian_Dead_Reckoning/Graph_Activity";
@@ -58,7 +67,8 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             "Magnetic_Field_Uncalibrated",
             "Gravity",
             "XY_Data_Set",
-            "DebuggingHeading"
+            "DebuggingHeading",
+            "GPS_Data"
     };
     private static final String[] DATA_FILE_HEADINGS = {
             "Initial_Orientation",
@@ -67,14 +77,19 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             "Magnetic_Field_Uncalibrated" + "\n" + "t,uMx,uMy,uMz,xBias,yBias,zBias,heading",
             "Gravity" + "\n" + "t,gx,gy,gz",
             "stepNumber,strideLength,totalDistance,time,Heading,originalPointX,originalPointY,rotatedPointX,rotatedPointY",
-            "Time,RawGyroX,RawGyroY,RawGyroZ,xGBias,yGBias,zGBias,RawMgnX,RawMgnY,RawMgnZ,xMBias,yMBias,zMBias,HeadingGyro,HeadingMgn,HeadingComp,TotalSteps"
+            "Time,RawGyroX,RawGyroY,RawGyroZ,xGBias,yGBias,zGBias,RawMgnX,RawMgnY,RawMgnZ,xMBias,yMBias,zMBias,HeadingGyro,HeadingMgn,HeadingComp,TotalSteps",
+            "TimeStamp,Latitude,Longitude,Altitude,Accuracy,Speed"
     };
+    public static final int FAST_UPDATE_INTERVAL = 5;
+    public static final int DEFAULT_UPDATE_INTERVAL = 30;
+    private static final int PERMISSION_FINE_LOCATION = 99;
 
     enum currentState {
         No_Steps,
         Step_Initial,
         Step_Terminate
     }
+
     private currentState stepState;
     private double[] quaternion;
     private float[] gravityCons = {0, 0, 9.81f};
@@ -82,7 +97,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     private StepDetection stepDetectionAlgorithm;
     private boolean isFirstRun;
     private double lastTimestamp;
-    private boolean a0,a1,a2 = false;
+    private boolean a0, a1, a2 = false;
     private double totalDistance = 0.0;
     private double lastStepLength;
     private static float thm = 0.5f;
@@ -155,8 +170,8 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     private float[] acceleration = new float[3];
     private float[] rotation = new float[3];
     private float[] RotationAngels = new float[3];  // RotationAngels[0] Heading
-                                                    // RotationAngels[1] Pitch
-                                                    //  RotationAngels[2] Roll
+    // RotationAngels[1] Pitch
+    //  RotationAngels[2] Roll
     private boolean hasAcceleration = false;
     private boolean hasMagnetic = false;
     protected Handler uiHandler;
@@ -174,6 +189,15 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     boolean hasBarometer = false;
     FloorDetection detectFloor;
     private OrientationFusedComplementary orientationFusedComplementary;
+
+
+    //*********** GPS
+    FusedLocationProviderClient fusedLocationProviderClient;
+    // Location Request
+    LocationRequest locationRequest;
+
+    LocationCallback locationCallback;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -263,7 +287,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         sensorManager.registerListener(GraphActivity.this,
                 sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
                 SensorManager.SENSOR_DELAY_FASTEST);
-        if(!PrefUtils.getPrefKalmanFilterAccEnabled(this)) {
+        if (!PrefUtils.getPrefKalmanFilterAccEnabled(this)) {
             sensorOrientation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
             sensorManager.registerListener(GraphActivity.this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
         }
@@ -274,11 +298,11 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
                     SensorManager.SENSOR_DELAY_FASTEST);
-            _R = new double[][]{{gyroBias[0],0,0},
-                                {0,gyroBias[1],0},
-                                {0,0,gyroBias[2]}};
-            _R_2 = new double[][]{{gyroBias[1],0},
-                                    {0,gyroBias[2]}};
+            _R = new double[][]{{gyroBias[0], 0, 0},
+                    {0, gyroBias[1], 0},
+                    {0, 0, gyroBias[2]}};
+            _R_2 = new double[][]{{gyroBias[1], 0},
+                    {0, gyroBias[2]}};
         } else {
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
@@ -286,16 +310,57 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
                     SensorManager.SENSOR_DELAY_FASTEST);
-            _R = new double[][]{{0.1*0.1,0,0},
-                                {0,0.1*0.1,0},
-                                {0,0,0.1*0.1}};
-            _R_2 = new double[][]{{0.1*0.1,0},
-                                {0,0.1*0.1}};
+            _R = new double[][]{{0.1 * 0.1, 0, 0},
+                    {0, 0.1 * 0.1, 0},
+                    {0, 0, 0.1 * 0.1}};
+            _R_2 = new double[][]{{0.1 * 0.1, 0},
+                    {0, 0.1 * 0.1}};
         }
         //Step detector on acc
         sensorManager.registerListener(GraphActivity.this,
                 sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_FASTEST);
+
+        // GPS
+        locationRequest = new LocationRequest();
+        fusedLocationProviderClient = new FusedLocationProviderClient(this);
+        locationRequest.setInterval(1000 * DEFAULT_UPDATE_INTERVAL);
+        locationRequest.setFastestInterval(1000 * FAST_UPDATE_INTERVAL);
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+
+        //event will happen when the interval is met
+        locationCallback = new LocationCallback() {
+
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                Location location = locationResult.getLastLocation();
+                long currtime = SystemClock.elapsedRealtimeNanos();
+                float altitude = 0;
+                float speed = 0;
+                if (location.hasAltitude()) {
+                    altitude = (float) location.getAltitude();
+                }
+                if (location.hasAltitude()) {
+                    speed = (float) location.getSpeed();
+                }
+                dataFileWriter.writeToFile("GPS_Data",
+                        (float) ((float) (currtime - startTime) * 1e-9),
+                        (float) location.getLatitude(),
+                        (float) location.getLongitude(),
+                        altitude,
+                        (float) location.getAccuracy(),
+                        speed);
+            }
+        };
+
+        if (PrefUtils.getPrefGPSPowerSaving(this))
+            locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        else
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+
         /*uiHandler = new Handler();
         uiRunnable = new Runnable() {
             @Override
@@ -336,13 +401,10 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", "Magnetic_field_bias:" +
                             Arrays.toString(magBias));
 
-                    if(hasBarometer)
-                    {
+                    if (hasBarometer) {
                         detectFloor = new FloorDetection();
                         sensorManager.registerListener(GraphActivity.this, sensorPressure, SensorManager.SENSOR_DELAY_NORMAL);
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(GraphActivity.this, "No Barometer Sensor Detected, Floor Detection can't be started!", Toast.LENGTH_SHORT).show();
                     }
                     if (isCalibrated) {
@@ -370,13 +432,23 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                                 sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                                 SensorManager.SENSOR_DELAY_FASTEST);
                     }
-                    if(!PrefUtils.getPrefKalmanFilterAccEnabled(GraphActivity.this))
-                    {
+                    if (!PrefUtils.getPrefKalmanFilterAccEnabled(GraphActivity.this)) {
                         sensorManager.registerListener(GraphActivity.this,
                                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                                 SensorManager.SENSOR_DELAY_FASTEST);
                     }
                     fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
+                    //Start_Location Update
+                    if (ActivityCompat.checkSelfPermission(GraphActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(GraphActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        Toast.makeText(GraphActivity.this, "GPS isn't enabled, no GPS data will be stored", Toast.LENGTH_LONG).show();
+                    }
+                    else {
+                        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+                        writeGPSData();
+                    }
+
 
                 } else {
                     if (isCalibrated) {
@@ -398,21 +470,19 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                         sensorManager.unregisterListener(GraphActivity.this,
                                 sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
                     }
-                    if(hasBarometer) {
+                    if (hasBarometer) {
                         sensorManager.unregisterListener(GraphActivity.this,
                                 sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE));
                     }
-                    if(!PrefUtils.getPrefKalmanFilterAccEnabled(GraphActivity.this))
-                    {
+                    if (!PrefUtils.getPrefKalmanFilterAccEnabled(GraphActivity.this)) {
                         sensorManager.unregisterListener(GraphActivity.this,
                                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
                     }
                     isRunning = false;
 
                     fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_play_arrow_black_24dp));
-
+                    fusedLocationProviderClient.removeLocationUpdates(locationCallback);
                 }
-
 
             }
         });
@@ -430,24 +500,60 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         meanFilterAcc = new MeanFilter();
         medianFilter = new MedianFilter();
         lowPassFilter = new LowPassFilter();
-        if(PrefUtils.getPrefMeanFilterSmoothingEnabled(this)){
+        if (PrefUtils.getPrefMeanFilterSmoothingEnabled(this)) {
             meanFilter.setTimeConstant(PrefUtils.getPrefMeanFilterSmoothingTimeConstant(this));
         }
-        if(PrefUtils.getPrefFSensorComplimentaryLinearAccelerationEnabled(this)){
+        if (PrefUtils.getPrefFSensorComplimentaryLinearAccelerationEnabled(this)) {
             orientationFusedComplementary.setTimeConstant(PrefUtils.getPrefFSensorComplimentaryLinearAccelerationTimeConstant(this));
         }
-        if(PrefUtils.getPrefMeanFilterSmoothingEnabledAcc(this)){
+        if (PrefUtils.getPrefMeanFilterSmoothingEnabledAcc(this)) {
             meanFilterAcc.setTimeConstant(PrefUtils.getPrefMeanFilterSmoothingTimeConstantAcc(this));
         }
-        if(PrefUtils.getPrefMedianFilterSmoothingEnabled(this)){
+        if (PrefUtils.getPrefMedianFilterSmoothingEnabled(this)) {
             medianFilter.setTimeConstant(PrefUtils.getPrefMedianFilterSmoothingTimeConstant(this));
         }
-        if(PrefUtils.getPrefLpfSmoothingEnabled(this)){
+        if (PrefUtils.getPrefLpfSmoothingEnabled(this)) {
             lowPassFilter.setTimeConstant(PrefUtils.getPrefLpfSmoothingTimeConstant(this));
         }
         linearAccelerationFilterKalman = new LinearAccelerationFusion(orientationFusionKalman);
 
     }
+    //write GPS date
+    private void writeGPSData() {
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        {
+            fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new  OnSuccessListener<Location> () {
+                @Override
+                        public void onSuccess(Location location) {
+                    long currtime = SystemClock.elapsedRealtimeNanos();
+                    float altitude = 0;
+                    float speed = 0;
+                    if (location.hasAltitude()) {
+                        altitude = (float) location.getAltitude();
+                    }
+                    if (location.hasAltitude()) {
+                        speed = (float) location.getSpeed();
+                    }
+                    dataFileWriter.writeToFile("GPS_Data",
+                            (float) ((currtime - startTime) * 1e-9),
+                            (float) location.getLatitude(),
+                            (float) location.getLongitude(),
+                            altitude,
+                            (float) location.getAccuracy(),
+                            speed);
+            }
+        });
+        }
+        else
+        {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_FINE_LOCATION);
+            }
+        }
+    }
+
     private void processAcceleration(float[] rawAcceleration, long acctime) {
         System.arraycopy(rawAcceleration, 0, this.acceleration, 0, this.acceleration.length);
         accTime = acctime;
@@ -600,7 +706,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         if (isRunning) {
             if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
                 ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
-                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataValues.add(0, (float) ((float)(event.timestamp - startTime) * 1e-9));
                 dataFileWriter.writeToFile("Gravity", dataValues);
             } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD || event.sensor.getType() ==
                     Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
@@ -622,7 +728,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                         event.values[0], event.values[1], event.values[2],
                         magBias[0], magBias[1], magBias[2]
                 );
-                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataValues.add(0, (float) ((float)(event.timestamp - startTime) * 1e-9));
                 dataValues.add(magHeading);
                 dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", dataValues);
 
@@ -727,7 +833,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                 );
                 //float[][] kH = KF_heading.getState();
                 //kalmanHeading = (float) (Math.atan2(kH[1][0], kH[0][0])); //+ initialHeading);
-                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataValues.add(0, (float) ((float)(event.timestamp - startTime) * 1e-9));
                 dataValues.add(gyroHeading);
                 //dataValues.add(kalmanHeading);
                 dataFileWriter.writeToFile("Gyroscope_Uncalibrated", dataValues);
@@ -812,7 +918,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     strideLength = (float) lastStepLength;
                     totalSteps++;
                     ArrayList<Float> dataValues = ExtraFunctions.arrayToList(acceleration);
-                    dataValues.add(0, (float)(accTime - startTime));
+                    dataValues.add(0, (float) ((float)(accTime - startTime) * 1e-9));
                     dataValues.add(1f);
                     dataFileWriter.writeToFile("Acceleration", dataValues);
 
@@ -846,7 +952,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                             stepCounter,
                             strideLength,
                             (float)totalDistance,
-                            (accTime - startTime),
+                            (float) ((accTime - startTime) * 1e-9),
                             //magHeading,
                             gyroHeading,
                             //kalmanHeading,
@@ -901,6 +1007,14 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                 } else {
                     Toast.makeText(GraphActivity.this, "Need location permission to create tour.", Toast.LENGTH_LONG).show();
                     finish();
+                }
+                break;
+            case PERMISSION_FINE_LOCATION:
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    writeGPSData();
+                }
+                else {
+                    Toast.makeText(this, "The App need GPS Permission to work properly", Toast.LENGTH_SHORT).show();
                 }
                 break;
         }
@@ -1031,7 +1145,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     }
 
     private void processLinearAcceleration(float[] linAcc) {
-        System.arraycopy(linAcc, 0, this.linearAcceleration, 0, this.linearAcceleration.length);
+        System.arraycopy(linAcc, 0, linearAcceleration, 0, linearAcceleration.length);
     }
 
 }

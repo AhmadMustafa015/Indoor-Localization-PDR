@@ -44,7 +44,7 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="LPF Smoothing For Accelerometer" >
         <SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:dialogTitle="Enable Low-Pass Filter"
             android:key="lpf_smoothing_enabled_preference"
             android:summaryOff="Low Pass Filter is Off"
@@ -61,7 +61,7 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="Enable Kalman Filter For Step Counting" >
         <SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:dialogTitle="Enable Kalman Filter"
             android:key="android_linear_accel_filter_enabled_preference"
             android:summaryOff="Kalman Filter is Off"
@@ -104,12 +104,21 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="Kalman Fusion" >
         <SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:dialogTitle="Enable Kalman Fusion"
             android:key="kalman_fusion_enabled_preference"
             android:summaryOff="Fusion is Off"
             android:summaryOn="Fusion is On"
             android:title="Enable Kalman Fusion" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="GPS" >
+        <SwitchPreference
+            android:defaultValue="false"
+            android:dialogTitle="GPS Power Saving Mode"
+            android:key="GPS_enabled_preference"
+            android:summaryOff="Power Saving Mode is Off"
+            android:summaryOn="Power Saving Mode is On"
+            android:title="GPS Power Saving Mode" />
     </PreferenceCategory>
 
 </PreferenceScreen>

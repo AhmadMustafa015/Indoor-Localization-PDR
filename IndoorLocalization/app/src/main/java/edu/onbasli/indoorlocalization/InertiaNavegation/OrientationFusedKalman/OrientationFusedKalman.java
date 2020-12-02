@@ -37,19 +37,19 @@ public class OrientationFusedKalman extends OrientationFused {
             thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while (run.get() && !thread.interrupted()) {
+                    while (run.get() && !Thread.interrupted()) {
 
                         output = calculate();
 
                         try {
-                            thread.sleep(20);
+                            Thread.sleep(20);
                         } catch (InterruptedException e) {
                             Log.e(TAG, "Kalman Thread", e);
-                            thread.currentThread().interrupt();
+                            Thread.currentThread().interrupt();
                         }
                     }
 
-                    thread.currentThread().interrupt();
+                    Thread.currentThread().interrupt();
                 }
             });
 

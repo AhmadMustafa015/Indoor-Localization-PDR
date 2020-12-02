@@ -12,7 +12,11 @@ public class PrefUtils
 {
 	public static boolean getPrefKalmanFilterAccEnabled(Context context) {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		return prefs.getBoolean(FilterConfigActivity.ANDROID_LINEAR_ACCEL_ENABLED_KEY, false);
+		return prefs.getBoolean(FilterConfigActivity.ANDROID_LINEAR_ACCEL_ENABLED_KEY, true);
+	}
+	public static boolean getPrefGPSPowerSaving(Context context) {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		return prefs.getBoolean(FilterConfigActivity.GPS_POWER_SAVING_MODE, false);
 	}
 
     public static float getPrefFSensorLpfLinearAccelerationTimeConstant(Context context) {
@@ -32,12 +36,12 @@ public class PrefUtils
 
     public static boolean getPrefFSensorKalmanLinearAccelerationEnabled(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(FilterConfigActivity.FSENSOR_KALMAN_LINEAR_ACCEL_ENABLED_KEY, false);
+        return prefs.getBoolean(FilterConfigActivity.FSENSOR_KALMAN_LINEAR_ACCEL_ENABLED_KEY, true);
     }
 
     public static boolean getPrefLpfSmoothingEnabled(Context context) {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		return prefs.getBoolean(FilterConfigActivity.LPF_SMOOTHING_ENABLED_KEY, false);
+		return prefs.getBoolean(FilterConfigActivity.LPF_SMOOTHING_ENABLED_KEY, true);
 	}
 
     public static float getPrefLpfSmoothingTimeConstant(Context context) {

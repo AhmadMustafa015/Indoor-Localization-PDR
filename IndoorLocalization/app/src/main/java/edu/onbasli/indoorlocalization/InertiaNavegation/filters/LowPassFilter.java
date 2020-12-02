@@ -66,6 +66,5 @@ public class LowPassFilter extends AveragingFilter
         super.reset();
         this.output = new float[]
                 { 0, 0, 0 };
-
     }
 }

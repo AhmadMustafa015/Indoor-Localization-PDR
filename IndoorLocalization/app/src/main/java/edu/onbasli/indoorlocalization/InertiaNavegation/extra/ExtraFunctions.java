@@ -106,7 +106,7 @@ public final class ExtraFunctions {
         return c;
     }
 
-    public static float[][] scaleMatrix(float a[][], float scalar) {
+    public static float[][] scaleMatrix(float[][] a, float scalar) {
 
         int numRows = a.length;
         int numColumns = a[0].length;
@@ -174,7 +174,7 @@ public final class ExtraFunctions {
 //    }
 
     public static float[][] denseMatrixToArray(DenseMatrix64F matrix) {
-        float array[][] = new float[matrix.getNumRows()][matrix.getNumCols()];
+        float[][] array = new float[matrix.getNumRows()][matrix.getNumCols()];
         for (int row = 0; row < matrix.getNumRows(); row++)
             for (int col = 0; col < matrix.getNumCols(); col++)
                 array[row][col] = (float) matrix.get(row,col);

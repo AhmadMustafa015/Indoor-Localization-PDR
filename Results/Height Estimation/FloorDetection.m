@@ -90,21 +90,25 @@ for i = 1:length(input_data)
 end
 time_sample = 1: length(input_data);
 allFloors(prevI:i) = currentFloor;
-t = tiledlayout(2,1)
+%t = tiledlayout(2,1)
 lines_x = [127 246 378 534 687 821 977 1108];
-ax1 = nexttile;
-plot(time_sample, input_data)
+figure(5)
+yyaxis left;
+p = plot(time_sample, input_data);
+p(1).LineWidth = 3;
+xlim([0 1129])
 ylabel('Pressure[hPa]')
 % for i = 1:length(lines_x)
 %     xline(lines_x(i),'r')
 % end
-nexttile
-plot(time_sample, allFloors)
+yyaxis right;
+p = plot(time_sample, allFloors);
 ylabel('Floor Number')
+p(1).LineWidth = 3;
 
-title(t,'Floor Detection')
-xlabel(t,'Sample')
-
+%title('Floor Detection')
+xlabel('Sample')
+legend("Pressure in [hPa]","Floor Number",'Location', 'northwest');
 % Move plots closer together
-xticklabels(ax1,{})
-t.TileSpacing = 'compact';                    
+%t.TileSpacing = 'compact';     
+xlim([0 1129])

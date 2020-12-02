@@ -41,9 +41,12 @@ public class FilterConfigActivity extends PreferenceActivity implements
     public static final String FSENSOR_LPF_LINEAR_ACCEL_TIME_CONSTANT_KEY = "lpf_linear_accel_time_constant_preference";
     public static final String FSENSOR_COMPLIMENTARY_LINEAR_ACCEL_TIME_CONSTANT_KEY = "complimentary_fusion_time_constant_preference";
 
+    public static final String GPS_POWER_SAVING_MODE = "GPS_enabled_preference";
+
     private SwitchPreference fSensorComplimentaryLinearAccel;
     private SwitchPreference fSensorKalmanLinearAccel;
     private SwitchPreference androidLinearAccel;
+    private SwitchPreference gpsSaving;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +57,8 @@ public class FilterConfigActivity extends PreferenceActivity implements
                 (FSENSOR_COMPLIMENTARY_LINEAR_ACCEL_ENABLED_KEY);
         fSensorKalmanLinearAccel = (SwitchPreference) findPreference(FSENSOR_KALMAN_LINEAR_ACCEL_ENABLED_KEY);
         androidLinearAccel = (SwitchPreference) findPreference(ANDROID_LINEAR_ACCEL_ENABLED_KEY);
+
+        gpsSaving = (SwitchPreference) findPreference(GPS_POWER_SAVING_MODE);
     }
 
     @Override
