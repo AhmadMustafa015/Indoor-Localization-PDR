@@ -1,0 +1,58 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "dspanah.sensor_based_har"
+        minSdkVersion 24
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    aaptOptions{
+        noCompress "tflite"
+    }
+    defaultConfig{
+        generatedDensities = []
+        applicationId = "dspanah.sensor_based_har"
+
+        ndk {
+            abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+            abiFilters.clear()
+        }
+    }
+
+    splits {
+        abi {
+            enable true //enables the ABIs split mechanism
+            reset() //reset the list of ABIs to be included to an empty string
+            include 'arm64-v8a', 'armeabi-v7a', 'x86'
+            universalApk true
+        }
+    }
+}
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'org.tensorflow:tensorflow-lite:+'
+    //implementation 'com.github.KalebKE:FSensor:v1.2.1'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.x.x'
+// https://mvnrepository.com/artifact/org.achartengine/achartengine
+    api files('src/libs/achartengine-1.2.0.jar')
+    implementation group: 'com.google.android.material', name: 'material', version: '1.0.0-rc01'
+
+}
