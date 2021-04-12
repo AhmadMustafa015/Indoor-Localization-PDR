@@ -8,8 +8,14 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
+import edu.onbasli.indoorlocalization.R;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.SeekBarPreference;
 
 import edu.onbasli.indoorlocalization.R;
+
+import static edu.onbasli.indoorlocalization.R.*;
+import static edu.onbasli.indoorlocalization.R.id.seekbar_speed;
 
 public class FilterConfigActivity extends PreferenceActivity implements
         OnSharedPreferenceChangeListener, OnPreferenceClickListener {
@@ -40,18 +46,17 @@ public class FilterConfigActivity extends PreferenceActivity implements
 
     public static final String FSENSOR_LPF_LINEAR_ACCEL_TIME_CONSTANT_KEY = "lpf_linear_accel_time_constant_preference";
     public static final String FSENSOR_COMPLIMENTARY_LINEAR_ACCEL_TIME_CONSTANT_KEY = "complimentary_fusion_time_constant_preference";
-
+    public static final String Walking_speed = "walking_seeed";
     public static final String GPS_POWER_SAVING_MODE = "GPS_enabled_preference";
 
     private SwitchPreference fSensorComplimentaryLinearAccel;
     private SwitchPreference fSensorKalmanLinearAccel;
     private SwitchPreference androidLinearAccel;
     private SwitchPreference gpsSaving;
-
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        addPreferencesFromResource(R.xml.preference_filter);
+        addPreferencesFromResource(xml.preference_filter);
 
         fSensorComplimentaryLinearAccel = (SwitchPreference) findPreference
                 (FSENSOR_COMPLIMENTARY_LINEAR_ACCEL_ENABLED_KEY);

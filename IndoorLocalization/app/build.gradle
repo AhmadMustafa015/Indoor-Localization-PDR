@@ -22,6 +22,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.commons/commons-math3
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation 'com.android.support:appcompat-v7:28.1.1'
+    implementation group: 'com.android.support', name: 'preference-v7', version: '28.0.0'
     //implementation 'com.android.support:support-v4:28.1.1'
     //implementation 'com.android.support:design:28.1.1'
 // https://mvnrepository.com/artifact/androidx.legacy/legacy-support-v4

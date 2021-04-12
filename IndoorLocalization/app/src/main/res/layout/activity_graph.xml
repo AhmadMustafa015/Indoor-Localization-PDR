@@ -60,5 +60,23 @@
         app:fabSize="normal"
         app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
 
+    <SeekBar
+        android:id="@+id/seekbar_speed"
+        android:layout_width="288dp"
+        android:layout_height="79dp"
+        android:layout_alignStart="@+id/linearLayoutGraph"
+        android:layout_alignEnd="@+id/linearLayoutGraph"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="645dp"
+        android:layout_marginEnd="82dp"
+        android:layout_marginBottom="-9dp"
+        android:defaultValue="true"
+        android:key="walking_seeed"
+        android:max="10"
+        android:min="2"
+        android:summary="3" />
+
 </RelativeLayout>
 

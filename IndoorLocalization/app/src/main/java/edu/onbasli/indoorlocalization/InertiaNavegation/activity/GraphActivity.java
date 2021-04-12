@@ -15,6 +15,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.preference.SeekBarPreference;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -100,10 +102,10 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     private boolean a0, a1, a2 = false;
     private double totalDistance = 0.0;
     private double lastStepLength;
-    private static float thm = 0.5f;
-    private static float thd = 0.3f;
+    private float thm = 0.5f;
+    private float thd = 0.3f;
     private long LSI = 0;
-    private static int mind = 50;
+    private int mind = 50;
     private long stepEpoch = 0;
     private double aMax;
     //private Vector aMin;
@@ -198,6 +200,8 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
 
     LocationCallback locationCallback;
 
+    //*********** SeekBar
+    private SeekBar seekBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -516,6 +520,31 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             lowPassFilter.setTimeConstant(PrefUtils.getPrefLpfSmoothingTimeConstant(this));
         }
         linearAccelerationFilterKalman = new LinearAccelerationFusion(orientationFusionKalman);
+        seekBar = (SeekBar) findViewById(R.id.seekbar_speed);
+        seekBar.setMax(12);
+        seekBar.setProgress(8);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                progress = 12 -progress;
+                thm = (float) (progress)/20.0f;
+                thd = progress/35.0f;
+                mind = 40 + progress;
+                //mind = 50;
+                //thd = 0.5f;
+                //thm = 1.5f;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
     }
     //write GPS date
