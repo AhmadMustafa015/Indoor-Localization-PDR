@@ -30,7 +30,7 @@ public class HARClassifier {
             }
         }
     private MappedByteBuffer loadModelFile(final Context context) throws IOException {
-        AssetFileDescriptor fileDescriptor = context.getAssets().openFd("converted_pred_model.tflite");
+        AssetFileDescriptor fileDescriptor = context.getAssets().openFd("4.tflite");
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();

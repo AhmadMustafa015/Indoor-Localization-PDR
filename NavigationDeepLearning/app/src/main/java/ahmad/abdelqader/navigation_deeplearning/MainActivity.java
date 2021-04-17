@@ -51,7 +51,7 @@ import ahmad.abdelqader.navigation_deeplearning.graph.ScatterPlot;
 public class MainActivity extends AppCompatActivity implements SensorEventListener, TextToSpeech.OnInitListener {
 
 
-    private static final int N_SAMPLES = 163;
+    private static final int N_SAMPLES = 201;
     private static int prevIdx = -1;
     private float totalDistance = 0;
 
@@ -696,12 +696,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private FloatingActionButton fabButton;
     private static final String FOLDER_NAME = "Navigation_RNN/Main_Activity";
     private static final String[] DATA_FILE_NAMES = {
-            "Debugging",
             "RNN_output"
     };
     private static final String[] DATA_FILE_HEADINGS = {
-            "Time,Qw,Qx,Qy,Qz,PosX,PosY,PosZ",
-            "TimeStamp,Qw,Qx,Qy,Qz,PosX,PosY,PosZ"
+            "TimeStamp,Qw,Qx,Qy,Qz,PosX,PosY,PosZ,pltX,pltY"
     };
 
     @Override
@@ -858,12 +856,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             currentTime = ExtraFunctions.nsToSec(event.timestamp);
             if(!first_run)
                 stride_acc++;*/
-            init_acc = event.values;
+            if (mx.size() > 100)
+                init_acc = event.values;
 
         } else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            gx.add(10 * event.values[0]);
-            gy.add(10 * event.values[1]);
-            gz.add(10 * event.values[2]);
+            gx.add(event.values[0]);
+            gy.add(event.values[1]);
+            gz.add(event.values[2]);
             currentTime = ExtraFunctions.nsToSec(event.timestamp);
             if(!first_run)
                 stride_gyro++;
@@ -921,9 +920,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
                 }
-                //init_q = getOrientationVectorFromAccelerationMagnetic(new float[]{init_acc[0],init_acc[1],init_acc[2]},
-                 //       new float[]{mx.get(mx.size() - 1), my.get(my.size() - 1), mz.get(mz.size() - 1)});
-                init_q = new Quaternion(1.0f,0.0f,0.0f,0f);
+                init_q = getOrientationVectorFromAccelerationMagnetic(new float[]{init_acc[0],init_acc[1],init_acc[2]},
+                        new float[]{mx.get(mx.size() - 100), my.get(my.size() - 100), mz.get(mz.size() - 100)});
+                float [] initial_q = new float[]{(float) init_q.getQ0(), (float) init_q.getQ1(), (float) init_q.getQ2(), (float) init_q.getQ3()};
+                dataFileWriter.writeToFile("RNN_output", "init_Heading: " + Arrays.toString(initial_q));
+                //init_q = new Quaternion(1.0f,0.0f,0.0f,0f);
                 first_run = false;
                 current_q = init_q;
                 current_p[0] = 0;
@@ -979,14 +980,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
             //rotating points by 90 degrees, so north is up
-            float rPointX = current_p[0];
-            float rPointY = current_p[1];
+            float rPointX = -current_p[0];
+            float rPointY = -current_p[1];
 
             scatterPlot.addPoint(rPointX, rPointY);
             mLinearLayout.removeAllViews();
             mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
             totalD.setText(String.format("%.2f",totalDistance));
-            t = (t - System.nanoTime()) / 1000000;
+            t = System.nanoTime() / 1000000;
+
+            dataFileWriter.writeToFile("RNN_output",
+                    (float)t,
+                    (float)current_q.getQ0(),
+                    (float)current_q.getQ1(),
+                    (float)current_q.getQ2(),
+                    (float)current_q.getQ3(),
+                    current_p[0],
+                    current_p[1],
+                    current_p[2],
+                    rPointX,
+                    rPointY);
 
             ax.clear();
             ay.clear();

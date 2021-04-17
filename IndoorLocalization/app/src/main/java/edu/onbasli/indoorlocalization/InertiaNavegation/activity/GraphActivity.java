@@ -971,7 +971,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
 
                     //rotating points by 90 degrees, so north is up
                     float rPointX = -oPointY;
-                    float rPointY = oPointX;
+                    float rPointY = -oPointX;
 
                     scatterPlot.addPoint(rPointX, rPointY);
                     //scatterPlot.addPointM(rPointXM, rPointYM);
