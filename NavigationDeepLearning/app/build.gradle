@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "dspanah.sensor_based_har"
-        minSdkVersion 24
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"

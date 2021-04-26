@@ -19,6 +19,7 @@
         android:id="@+id/linearLayoutGraph">
 
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -62,20 +63,18 @@
 
     <SeekBar
         android:id="@+id/seekbar_speed"
-        android:layout_width="288dp"
-        android:layout_height="79dp"
-        android:layout_alignStart="@+id/linearLayoutGraph"
-        android:layout_alignEnd="@+id/linearLayoutGraph"
+        android:layout_width="344dp"
+        android:layout_height="73dp"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="645dp"
-        android:layout_marginEnd="82dp"
-        android:layout_marginBottom="-9dp"
+        android:layout_marginStart="43dp"
+        android:layout_marginTop="723dp"
+        android:layout_marginEnd="84dp"
+        android:layout_marginBottom="22dp"
         android:defaultValue="true"
         android:key="walking_seeed"
-        android:max="10"
-        android:min="2"
         android:summary="3" />
 
 </RelativeLayout>
